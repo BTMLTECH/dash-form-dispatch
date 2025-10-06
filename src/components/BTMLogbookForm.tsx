@@ -18,6 +18,8 @@ import {
 } from "@/components/ui/form";
 import { toast } from "@/hooks/use-toast";
 import { Plane } from "lucide-react";
+import axios from "axios";
+import { useState } from "react";
 
 const formSchema = z.object({
   // Common fields
@@ -27,7 +29,7 @@ const formSchema = z.object({
   protocolOfficer: z.string().min(1, "Protocol officer name is required"),
   passengerName: z.string().min(1, "Passenger name is required"),
   company: z.string().min(1, "Company name is required"),
-  
+
   // Arrivals section
   meetingLocation: z.string().optional(),
   baggageAssistance: z.string().optional(),
@@ -35,7 +37,7 @@ const formSchema = z.object({
   luggageNo: z.string().optional(),
   arrivalComment: z.string().optional(),
   arrivalRating: z.string().optional(),
-  
+
   // Departures section
   protocolOfficerMeet: z.string().optional(),
   meetingPlace: z.string().optional(),
@@ -50,6 +52,8 @@ const formSchema = z.object({
 type FormData = z.infer<typeof formSchema>;
 
 const BTMLogbookForm = () => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -76,13 +80,38 @@ const BTMLogbookForm = () => {
     },
   });
 
-  const onSubmit = (data: FormData) => {
-    console.log("Form submitted:", data);
-    toast({
-      title: "Form Submitted Successfully",
-      description: "Your BTM logbook entry has been recorded.",
-    });
-    form.reset();
+  const onSubmit = async (data: FormData) => {
+    try {
+      setIsSubmitting(true);
+
+      const response = await axios.post(
+        "https://airport-server-onj2.onrender.com/api/airport",
+        data
+      );
+
+      if (response.data.success) {
+        toast({
+          title: "Form Submitted Successfully",
+          description: "Your BTM logbook entry has been recorded.",
+        });
+        form.reset();
+      } else {
+        toast({
+          title: "Submission Failed",
+          description: response.data.message || "Something went wrong.",
+          variant: "destructive",
+        });
+      }
+    } catch (error: any) {
+      console.error("Error submitting form:", error);
+      toast({
+        title: "Server Error",
+        description: "Could not connect to the server.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -98,7 +127,6 @@ const BTMLogbookForm = () => {
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            {/* Common Information */}
             <Card>
               <CardHeader>
                 <CardTitle>General Information</CardTitle>
@@ -196,18 +224,36 @@ const BTMLogbookForm = () => {
                   name="meetingLocation"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Where Were You Met By The Protocol Officer?</FormLabel>
+                      <FormLabel>
+                        Where Were You Met By The Protocol Officer?
+                      </FormLabel>
                       <FormControl>
                         <RadioGroup
                           onValueChange={field.onChange}
                           value={field.value}
                           className="grid grid-cols-2 md:grid-cols-4 gap-4"
                         >
-                          {["At Tunnel", "At Staircase", "At Immigrations", "At Carousel", 
-                            "Outside Airport", "Inside Airport", "Other"].map((option) => (
-                            <div key={option} className="flex items-center space-x-2">
-                              <RadioGroupItem value={option} id={`arrival-${option}`} />
-                              <Label htmlFor={`arrival-${option}`} className="cursor-pointer">
+                          {[
+                            "At Tunnel",
+                            "At Staircase",
+                            "At Immigrations",
+                            "At Carousel",
+                            "Outside Airport",
+                            "Inside Airport",
+                            "Other",
+                          ].map((option) => (
+                            <div
+                              key={option}
+                              className="flex items-center space-x-2"
+                            >
+                              <RadioGroupItem
+                                value={option}
+                                id={`arrival-${option}`}
+                              />
+                              <Label
+                                htmlFor={`arrival-${option}`}
+                                className="cursor-pointer"
+                              >
                                 {option}
                               </Label>
                             </div>
@@ -227,7 +273,10 @@ const BTMLogbookForm = () => {
                       <FormItem>
                         <FormLabel>Luggage No.</FormLabel>
                         <FormControl>
-                          <Input placeholder="Enter luggage number" {...field} />
+                          <Input
+                            placeholder="Enter luggage number"
+                            {...field}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -249,11 +298,21 @@ const BTMLogbookForm = () => {
                         >
                           <div className="flex items-center space-x-2">
                             <RadioGroupItem value="yes" id="baggage-yes" />
-                            <Label htmlFor="baggage-yes" className="cursor-pointer">Yes</Label>
+                            <Label
+                              htmlFor="baggage-yes"
+                              className="cursor-pointer"
+                            >
+                              Yes
+                            </Label>
                           </div>
                           <div className="flex items-center space-x-2">
                             <RadioGroupItem value="no" id="baggage-no" />
-                            <Label htmlFor="baggage-no" className="cursor-pointer">No</Label>
+                            <Label
+                              htmlFor="baggage-no"
+                              className="cursor-pointer"
+                            >
+                              No
+                            </Label>
                           </div>
                         </RadioGroup>
                       </FormControl>
@@ -276,11 +335,21 @@ const BTMLogbookForm = () => {
                         >
                           <div className="flex items-center space-x-2">
                             <RadioGroupItem value="yes" id="handover-yes" />
-                            <Label htmlFor="handover-yes" className="cursor-pointer">Yes</Label>
+                            <Label
+                              htmlFor="handover-yes"
+                              className="cursor-pointer"
+                            >
+                              Yes
+                            </Label>
                           </div>
                           <div className="flex items-center space-x-2">
                             <RadioGroupItem value="no" id="handover-no" />
-                            <Label htmlFor="handover-no" className="cursor-pointer">No</Label>
+                            <Label
+                              htmlFor="handover-no"
+                              className="cursor-pointer"
+                            >
+                              No
+                            </Label>
                           </div>
                         </RadioGroup>
                       </FormControl>
@@ -296,7 +365,7 @@ const BTMLogbookForm = () => {
                     <FormItem>
                       <FormLabel>Comment & Rating</FormLabel>
                       <FormControl>
-                        <Textarea 
+                        <Textarea
                           placeholder="Enter your comments here..."
                           className="resize-none"
                           rows={4}
@@ -321,9 +390,20 @@ const BTMLogbookForm = () => {
                           className="flex gap-4"
                         >
                           {[1, 2, 3, 4, 5].map((rating) => (
-                            <div key={rating} className="flex items-center space-x-2">
-                              <RadioGroupItem value={rating.toString()} id={`rating-${rating}`} />
-                              <Label htmlFor={`rating-${rating}`} className="cursor-pointer">{rating}</Label>
+                            <div
+                              key={rating}
+                              className="flex items-center space-x-2"
+                            >
+                              <RadioGroupItem
+                                value={rating.toString()}
+                                id={`rating-${rating}`}
+                              />
+                              <Label
+                                htmlFor={`rating-${rating}`}
+                                className="cursor-pointer"
+                              >
+                                {rating}
+                              </Label>
                             </div>
                           ))}
                         </RadioGroup>
@@ -355,11 +435,21 @@ const BTMLogbookForm = () => {
                         >
                           <div className="flex items-center space-x-2">
                             <RadioGroupItem value="yes" id="officer-meet-yes" />
-                            <Label htmlFor="officer-meet-yes" className="cursor-pointer">Yes</Label>
+                            <Label
+                              htmlFor="officer-meet-yes"
+                              className="cursor-pointer"
+                            >
+                              Yes
+                            </Label>
                           </div>
                           <div className="flex items-center space-x-2">
                             <RadioGroupItem value="no" id="officer-meet-no" />
-                            <Label htmlFor="officer-meet-no" className="cursor-pointer">No</Label>
+                            <Label
+                              htmlFor="officer-meet-no"
+                              className="cursor-pointer"
+                            >
+                              No
+                            </Label>
                           </div>
                         </RadioGroup>
                       </FormControl>
@@ -373,7 +463,9 @@ const BTMLogbookForm = () => {
                   name="meetingPlace"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Where Did Protocol Officer Meet You?</FormLabel>
+                      <FormLabel>
+                        Where Did Protocol Officer Meet You?
+                      </FormLabel>
                       <FormControl>
                         <RadioGroup
                           onValueChange={field.onChange}
@@ -382,11 +474,21 @@ const BTMLogbookForm = () => {
                         >
                           <div className="flex items-center space-x-2">
                             <RadioGroupItem value="inside" id="meet-inside" />
-                            <Label htmlFor="meet-inside" className="cursor-pointer">Inside</Label>
+                            <Label
+                              htmlFor="meet-inside"
+                              className="cursor-pointer"
+                            >
+                              Inside
+                            </Label>
                           </div>
                           <div className="flex items-center space-x-2">
                             <RadioGroupItem value="outside" id="meet-outside" />
-                            <Label htmlFor="meet-outside" className="cursor-pointer">Outside</Label>
+                            <Label
+                              htmlFor="meet-outside"
+                              className="cursor-pointer"
+                            >
+                              Outside
+                            </Label>
                           </div>
                         </RadioGroup>
                       </FormControl>
@@ -400,7 +502,9 @@ const BTMLogbookForm = () => {
                   name="immigrationFormProvided"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Did Protocol Officer Provide Immigration Form?</FormLabel>
+                      <FormLabel>
+                        Did Protocol Officer Provide Immigration Form?
+                      </FormLabel>
                       <FormControl>
                         <RadioGroup
                           onValueChange={field.onChange}
@@ -408,12 +512,28 @@ const BTMLogbookForm = () => {
                           className="flex gap-4"
                         >
                           <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="yes" id="immigration-form-yes" />
-                            <Label htmlFor="immigration-form-yes" className="cursor-pointer">Yes</Label>
+                            <RadioGroupItem
+                              value="yes"
+                              id="immigration-form-yes"
+                            />
+                            <Label
+                              htmlFor="immigration-form-yes"
+                              className="cursor-pointer"
+                            >
+                              Yes
+                            </Label>
                           </div>
                           <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="no" id="immigration-form-no" />
-                            <Label htmlFor="immigration-form-no" className="cursor-pointer">No</Label>
+                            <RadioGroupItem
+                              value="no"
+                              id="immigration-form-no"
+                            />
+                            <Label
+                              htmlFor="immigration-form-no"
+                              className="cursor-pointer"
+                            >
+                              No
+                            </Label>
                           </div>
                         </RadioGroup>
                       </FormControl>
@@ -427,7 +547,9 @@ const BTMLogbookForm = () => {
                   name="fastTrackProvided"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Was Immigration Fast Track Provided?</FormLabel>
+                      <FormLabel>
+                        Was Immigration Fast Track Provided?
+                      </FormLabel>
                       <FormControl>
                         <RadioGroup
                           onValueChange={field.onChange}
@@ -436,11 +558,21 @@ const BTMLogbookForm = () => {
                         >
                           <div className="flex items-center space-x-2">
                             <RadioGroupItem value="yes" id="fast-track-yes" />
-                            <Label htmlFor="fast-track-yes" className="cursor-pointer">Yes</Label>
+                            <Label
+                              htmlFor="fast-track-yes"
+                              className="cursor-pointer"
+                            >
+                              Yes
+                            </Label>
                           </div>
                           <div className="flex items-center space-x-2">
                             <RadioGroupItem value="no" id="fast-track-no" />
-                            <Label htmlFor="fast-track-no" className="cursor-pointer">No</Label>
+                            <Label
+                              htmlFor="fast-track-no"
+                              className="cursor-pointer"
+                            >
+                              No
+                            </Label>
                           </div>
                         </RadioGroup>
                       </FormControl>
@@ -462,16 +594,34 @@ const BTMLogbookForm = () => {
                           className="flex gap-4"
                         >
                           <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="standard" id="level-standard" />
-                            <Label htmlFor="level-standard" className="cursor-pointer">Standard</Label>
+                            <RadioGroupItem
+                              value="standard"
+                              id="level-standard"
+                            />
+                            <Label
+                              htmlFor="level-standard"
+                              className="cursor-pointer"
+                            >
+                              Standard
+                            </Label>
                           </div>
                           <div className="flex items-center space-x-2">
                             <RadioGroupItem value="vip" id="level-vip" />
-                            <Label htmlFor="level-vip" className="cursor-pointer">VIP</Label>
+                            <Label
+                              htmlFor="level-vip"
+                              className="cursor-pointer"
+                            >
+                              VIP
+                            </Label>
                           </div>
                           <div className="flex items-center space-x-2">
                             <RadioGroupItem value="vvip" id="level-vvip" />
-                            <Label htmlFor="level-vvip" className="cursor-pointer">VVIP</Label>
+                            <Label
+                              htmlFor="level-vvip"
+                              className="cursor-pointer"
+                            >
+                              VVIP
+                            </Label>
                           </div>
                         </RadioGroup>
                       </FormControl>
@@ -485,7 +635,9 @@ const BTMLogbookForm = () => {
                   name="handoverToAirside"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Passenger Handed over to Airside Officer</FormLabel>
+                      <FormLabel>
+                        Passenger Handed over to Airside Officer
+                      </FormLabel>
                       <FormControl>
                         <RadioGroup
                           onValueChange={field.onChange}
@@ -494,11 +646,21 @@ const BTMLogbookForm = () => {
                         >
                           <div className="flex items-center space-x-2">
                             <RadioGroupItem value="yes" id="airside-yes" />
-                            <Label htmlFor="airside-yes" className="cursor-pointer">Yes</Label>
+                            <Label
+                              htmlFor="airside-yes"
+                              className="cursor-pointer"
+                            >
+                              Yes
+                            </Label>
                           </div>
                           <div className="flex items-center space-x-2">
                             <RadioGroupItem value="no" id="airside-no" />
-                            <Label htmlFor="airside-no" className="cursor-pointer">No</Label>
+                            <Label
+                              htmlFor="airside-no"
+                              className="cursor-pointer"
+                            >
+                              No
+                            </Label>
                           </div>
                         </RadioGroup>
                       </FormControl>
@@ -528,7 +690,11 @@ const BTMLogbookForm = () => {
                       <FormItem>
                         <FormLabel>Airside Officer Tel No.</FormLabel>
                         <FormControl>
-                          <Input type="tel" placeholder="Phone number" {...field} />
+                          <Input
+                            type="tel"
+                            placeholder="Phone number"
+                            {...field}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -539,8 +705,13 @@ const BTMLogbookForm = () => {
             </Card>
 
             <div className="flex justify-end">
-              <Button type="submit" size="lg" className="w-full md:w-auto">
-                Submit Logbook Entry
+              <Button
+                type="submit"
+                size="lg"
+                className="w-full md:w-auto"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? "Submitting..." : "Submit Logbook Entry"}
               </Button>
             </div>
           </form>
