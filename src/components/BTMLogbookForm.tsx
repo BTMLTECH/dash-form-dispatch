@@ -138,34 +138,36 @@ const BTMLogbookForm = () => {
   const selectedService = form.watch("serviceType");
 
   return (
-    <div className="min-h-screen bg-gray-50 py-10 px-4">
+    <div className="min-h-screen bg-background py-10 px-4">
       <div className="max-w-4xl mx-auto">
-        {/* ✅ Professional Header */}
-        <header className="relative flex flex-col items-center text-center mb-10">
+        <header className="relative flex flex-col items-center text-center mb-10 rounded-xl border border-gray-400 bg-gradient-to-b from-white to-gray-100 shadow-sm p-6">
           <div className="flex items-center justify-center gap-4 mb-3">
             <img
               src="/assets/btm.png"
               alt="BTM Logo"
-              className="h-14 w-auto drop-shadow-md"
+              className="h-14 w-auto drop-shadow-sm"
             />
             <div className="text-left">
-              <h1 className="text-3xl font-extrabold tracking-tight text-[#E86700]">
+              <h1 className="text-3xl font-extrabold tracking-tight text-primary">
                 BTM Airport Services Feedback
               </h1>
+              <p className="text-sm text-gray-500 mt-1">
+                Your feedback helps us improve your experience
+              </p>
             </div>
           </div>
 
-          {/* Decorative line under header */}
-          <div className="w-24 h-1 bg-[#E86700] rounded-full mt-2"></div>
+          {/* Decorative underline */}
+          <div className="w-32 h-[2px] bg-gradient-to-r from-transparent via-gray-500 to-transparent rounded-full"></div>
         </header>
 
         {/* ✅ Form */}
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
             {/* Service Type Card */}
-            <Card className="shadow-sm border-t-4 border-[#E86700]">
+            <Card className="shadow-sm border-t-4 border-primary bg-card text-card-foreground">
               <CardHeader>
-                <CardTitle className="text-[#E86700]">Service Type</CardTitle>
+                <CardTitle className="text-primary">Service Type</CardTitle>
               </CardHeader>
               <CardContent>
                 <FormField
@@ -173,7 +175,7 @@ const BTMLogbookForm = () => {
                   name="serviceType"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="font-medium text-gray-700">
+                      <FormLabel className="font-medium text-foreground">
                         Did you book BTM protocol service for?
                       </FormLabel>
                       <FormControl>
@@ -186,12 +188,9 @@ const BTMLogbookForm = () => {
                             <RadioGroupItem
                               value="arrival"
                               id="arrival"
-                              className="text-[#E86700]"
+                              className="text-primary"
                             />
-                            <label
-                              htmlFor="arrival"
-                              className="cursor-pointer text-gray-700"
-                            >
+                            <label htmlFor="arrival" className="cursor-pointer">
                               Arrival
                             </label>
                           </div>
@@ -199,11 +198,11 @@ const BTMLogbookForm = () => {
                             <RadioGroupItem
                               value="departure"
                               id="departure"
-                              className="text-[#E86700]"
+                              className="text-primary"
                             />
                             <label
                               htmlFor="departure"
-                              className="cursor-pointer text-gray-700"
+                              className="cursor-pointer"
                             >
                               Departure
                             </label>
@@ -219,11 +218,12 @@ const BTMLogbookForm = () => {
 
             {/* ✅ Arrival Section */}
             {selectedService === "arrival" && (
-              <Card className="shadow-sm border-t-4 border-[#E86700]">
+              <Card className="shadow-sm border-t-4 border-primary bg-card text-card-foreground">
                 <CardHeader>
-                  <CardTitle className="text-[#E86700]">Arrival</CardTitle>
+                  <CardTitle className="text-primary">Arrival</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6">
+                  {/* Meeting Location */}
                   <FormField
                     control={form.control}
                     name="meetingLocation"
@@ -242,7 +242,7 @@ const BTMLogbookForm = () => {
                               <RadioGroupItem
                                 value="yes"
                                 id="met-yes"
-                                className="text-[#E86700]"
+                                className="text-primary"
                               />
                               <label htmlFor="met-yes">Yes</label>
                             </div>
@@ -250,7 +250,7 @@ const BTMLogbookForm = () => {
                               <RadioGroupItem
                                 value="no"
                                 id="met-no"
-                                className="text-[#E86700]"
+                                className="text-primary"
                               />
                               <label htmlFor="met-no">No</label>
                             </div>
@@ -272,7 +272,7 @@ const BTMLogbookForm = () => {
                           <Input
                             placeholder="Enter luggage number"
                             {...field}
-                            className="border border-gray-300 rounded-md hover:border-[#E86700] focus:outline-none focus:ring-0 focus:border-[#E86700]"
+                            className="border border-border rounded-md hover:border-primary focus:outline-none focus:ring-0 focus:border-primary"
                           />
                         </FormControl>
                         <FormMessage />
@@ -292,7 +292,7 @@ const BTMLogbookForm = () => {
                             placeholder="Enter your comments here..."
                             rows={4}
                             {...field}
-                            className="border border-gray-300 rounded-md hover:border-[#E86700] focus:outline-none focus:ring-0 focus:border-[#E86700]"
+                            className="border border-border rounded-md hover:border-primary focus:outline-none focus:ring-0 focus:border-primary"
                           />
                         </FormControl>
                         <FormMessage />
@@ -300,7 +300,7 @@ const BTMLogbookForm = () => {
                     )}
                   />
 
-                  {/* ✅ Emoji Rating (Arrival) */}
+                  {/* Rating */}
                   <FormField
                     control={form.control}
                     name="arrivalRating"
@@ -313,13 +313,7 @@ const BTMLogbookForm = () => {
                             value={field.value}
                             className="flex justify-between max-w-sm mt-2"
                           >
-                            {[
-                              { num: 1, icon: "😡" },
-                              { num: 2, icon: "😞" },
-                              { num: 3, icon: "😐" },
-                              { num: 4, icon: "😊" },
-                              { num: 5, icon: "😍" },
-                            ].map(({ num, icon }) => (
+                            {[1, 2, 3, 4, 5].map((num) => (
                               <div
                                 key={num}
                                 className="flex flex-col items-center space-y-1"
@@ -327,13 +321,13 @@ const BTMLogbookForm = () => {
                                 <RadioGroupItem
                                   value={num.toString()}
                                   id={`rating-${num}`}
-                                  className="text-[#E86700] focus:ring-[#E86700]"
+                                  className="text-primary focus:ring-primary"
                                 />
                                 <label
                                   htmlFor={`rating-${num}`}
                                   className="text-xl"
                                 >
-                                  {icon}
+                                  {["😡", "😞", "😐", "😊", "😍"][num - 1]}
                                 </label>
                               </div>
                             ))}
@@ -348,14 +342,13 @@ const BTMLogbookForm = () => {
             )}
 
             {/* ✅ Departure Section */}
-            {/* ✅ Departure Section */}
             {selectedService === "departure" && (
-              <Card className="shadow-sm border-t-4 border-[#E86700]">
+              <Card className="shadow-sm border-t-4 border-primary bg-card text-card-foreground">
                 <CardHeader>
-                  <CardTitle className="text-[#E86700]">Departure</CardTitle>
+                  <CardTitle className="text-primary">Departure</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  {/* Did protocol officer meet you? */}
+                  {/* Protocol Officer Meet */}
                   <FormField
                     control={form.control}
                     name="protocolOfficerMeet"
@@ -372,7 +365,7 @@ const BTMLogbookForm = () => {
                               <RadioGroupItem
                                 value="yes"
                                 id="departure-meet-yes"
-                                className="text-[#E86700]"
+                                className="text-primary"
                               />
                               <label htmlFor="departure-meet-yes">Yes</label>
                             </div>
@@ -380,7 +373,7 @@ const BTMLogbookForm = () => {
                               <RadioGroupItem
                                 value="no"
                                 id="departure-meet-no"
-                                className="text-[#E86700]"
+                                className="text-primary"
                               />
                               <label htmlFor="departure-meet-no">No</label>
                             </div>
@@ -409,7 +402,7 @@ const BTMLogbookForm = () => {
                               <RadioGroupItem
                                 value="yes"
                                 id="immigration-yes"
-                                className="text-[#E86700]"
+                                className="text-primary"
                               />
                               <label htmlFor="immigration-yes">Yes</label>
                             </div>
@@ -417,7 +410,7 @@ const BTMLogbookForm = () => {
                               <RadioGroupItem
                                 value="no"
                                 id="immigration-no"
-                                className="text-[#E86700]"
+                                className="text-primary"
                               />
                               <label htmlFor="immigration-no">No</label>
                             </div>
@@ -427,7 +420,7 @@ const BTMLogbookForm = () => {
                     )}
                   />
 
-                  {/* Immigration Type — only if yes */}
+                  {/* Immigration Type */}
                   {form.watch("immigrationAssistance") === "yes" && (
                     <FormField
                       control={form.control}
@@ -441,30 +434,21 @@ const BTMLogbookForm = () => {
                               value={field.value}
                               className="flex gap-6 mt-2"
                             >
-                              <div className="flex items-center space-x-2">
-                                <RadioGroupItem
-                                  value="standard"
-                                  id="standard"
-                                  className="text-[#E86700]"
-                                />
-                                <label htmlFor="standard">Standard</label>
-                              </div>
-                              <div className="flex items-center space-x-2">
-                                <RadioGroupItem
-                                  value="vip"
-                                  id="vip"
-                                  className="text-[#E86700]"
-                                />
-                                <label htmlFor="vip">VIP</label>
-                              </div>
-                              <div className="flex items-center space-x-2">
-                                <RadioGroupItem
-                                  value="vvip"
-                                  id="vvip"
-                                  className="text-[#E86700]"
-                                />
-                                <label htmlFor="vvip">VVIP</label>
-                              </div>
+                              {["standard", "vip", "vvip"].map((type) => (
+                                <div
+                                  key={type}
+                                  className="flex items-center space-x-2"
+                                >
+                                  <RadioGroupItem
+                                    value={type}
+                                    id={type}
+                                    className="text-primary"
+                                  />
+                                  <label htmlFor={type} className="capitalize">
+                                    {type}
+                                  </label>
+                                </div>
+                              ))}
                             </RadioGroup>
                           </FormControl>
                         </FormItem>
@@ -480,7 +464,7 @@ const BTMLogbookForm = () => {
               <Button
                 type="submit"
                 size="lg"
-                className="bg-[#E86700] hover:bg-[#cf5900] transition-colors"
+                className="bg-primary hover:bg-[hsl(240_4%_80%)] text-black"
                 disabled={isSubmitting}
               >
                 {isSubmitting ? "Submitting..." : "Submit Feedback"}
@@ -493,9 +477,7 @@ const BTMLogbookForm = () => {
         <Dialog open={showSuccess} onOpenChange={setShowSuccess}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle className="text-[#E86700]">
-                🎉 Thank you!
-              </DialogTitle>
+              <DialogTitle className="text-primary">🎉 Thank you!</DialogTitle>
             </DialogHeader>
             <p>
               Thank you very much for filling our form. Would you like to book
@@ -504,12 +486,12 @@ const BTMLogbookForm = () => {
             <DialogFooter className="flex justify-end space-x-2">
               <Button
                 onClick={() => setShowSuccess(false)}
-                className="bg-[#E86700] hover:bg-[#cf5900]"
+                className="bg-primary hover:bg-[hsl(27,84%,40%)]"
               >
                 No
               </Button>
               <Button
-                className="bg-[#E86700] hover:bg-[#cf5900]"
+                className="bg-primary hover:bg-[hsl(27,84%,40%)]"
                 onClick={() => {
                   setShowSuccess(false);
                   window.open(
