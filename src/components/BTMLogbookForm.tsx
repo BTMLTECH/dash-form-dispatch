@@ -6,8 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
+
 import {
   Form,
   FormControl,
@@ -17,75 +16,96 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { toast } from "@/hooks/use-toast";
-import { Plane } from "lucide-react";
 import axios from "axios";
 import { useState } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "./ui/dialog";
 
-const formSchema = z.object({
-  // Common fields
-  date: z.string().min(1, "Date is required"),
-  flight: z.string().min(1, "Flight number is required"),
-  time: z.string().min(1, "Time is required"),
-  protocolOfficer: z.string().min(1, "Protocol officer name is required"),
-  passengerName: z.string().min(1, "Passenger name is required"),
-  company: z.string().min(1, "Company name is required"),
+export const formSchema = z
+  .object({
+    // Common
+    serviceType: z
+      .union([z.enum(["arrival", "departure"]), z.literal("")])
+      .refine((val) => val !== "", {
+        message: "Please select a service type",
+      }),
 
-  // Arrivals section
-  meetingLocation: z.string().optional(),
-  baggageAssistance: z.string().optional(),
-  handoverToDriver: z.string().optional(),
-  luggageNo: z.string().optional(),
-  arrivalComment: z.string().optional(),
-  arrivalRating: z.string().optional(),
+    // Arrival Section
+    meetingLocation: z.string().optional(),
+    luggageNo: z.string().optional(),
+    arrivalComment: z.string().optional(),
+    arrivalRating: z.string().optional(),
 
-  // Departures section
-  protocolOfficerMeet: z.string().optional(),
-  meetingPlace: z.string().optional(),
-  immigrationFormProvided: z.string().optional(),
-  fastTrackProvided: z.string().optional(),
-  meetGreetLevel: z.string().optional(),
-  handoverToAirside: z.string().optional(),
-  airsideOfficerName: z.string().optional(),
-  airsideOfficerTel: z.string().optional(),
-});
+    // Departure Section
+    protocolOfficerMeet: z.string().optional(),
+    immigrationAssistance: z.string().optional(),
+    meetGreetLevel: z.string().optional(),
+  })
+  .superRefine((data, ctx) => {
+    // ✅ Conditional validation: only validate the selected service
+    if (data.serviceType === "arrival") {
+      if (!data.meetingLocation) {
+        ctx.addIssue({
+          path: ["meetingLocation"],
+          message: "Please select an option",
+          code: "custom",
+        });
+      }
+      if (!data.arrivalRating) {
+        ctx.addIssue({
+          path: ["arrivalRating"],
+          message: "Please provide a rating",
+          code: "custom",
+        });
+      }
+    } else if (data.serviceType === "departure") {
+      if (!data.protocolOfficerMeet) {
+        ctx.addIssue({
+          path: ["protocolOfficerMeet"],
+          message: "Please select an option",
+          code: "custom",
+        });
+      }
+      if (!data.immigrationAssistance) {
+        ctx.addIssue({
+          path: ["immigrationAssistance"],
+          message: "Please select an option",
+          code: "custom",
+        });
+      }
+    }
+  });
 
 type FormData = z.infer<typeof formSchema>;
 
 const BTMLogbookForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
-
+  const [showSuccess, setShowSuccess] = useState(false);
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      date: "",
-      flight: "",
-      time: "",
-      protocolOfficer: "",
-      passengerName: "",
-      company: "",
+      serviceType: "",
       meetingLocation: "",
-      baggageAssistance: "",
-      handoverToDriver: "",
       luggageNo: "",
       arrivalComment: "",
       arrivalRating: "",
       protocolOfficerMeet: "",
-      meetingPlace: "",
-      immigrationFormProvided: "",
-      fastTrackProvided: "",
+      immigrationAssistance: "",
       meetGreetLevel: "",
-      handoverToAirside: "",
-      airsideOfficerName: "",
-      airsideOfficerTel: "",
     },
   });
-
   const onSubmit = async (data: FormData) => {
     try {
       setIsSubmitting(true);
 
       const response = await axios.post(
-        "https://airport-server-onj2.onrender.com/api/airport",
+        "https://airport-server-onj2.onrender.com/api/feedback",
+        // "http://localhost:5000/api/feedback",
         data
       );
 
@@ -95,6 +115,7 @@ const BTMLogbookForm = () => {
           description: "Your BTM logbook entry has been recorded.",
         });
         form.reset();
+        setShowSuccess(true);
       } else {
         toast({
           title: "Submission Failed",
@@ -114,97 +135,80 @@ const BTMLogbookForm = () => {
     }
   };
 
-  return (
-    <div className="min-h-screen bg-background py-8 px-4">
-      <div className="max-w-6xl mx-auto">
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <Plane className="h-10 w-10 text-primary" />
-            <h1 className="text-4xl font-bold text-primary">BTM Logbook</h1>
-          </div>
-          <p className="text-muted-foreground">Business Travel Management</p>
-        </div>
+  const selectedService = form.watch("serviceType");
 
+  return (
+    <div className="min-h-screen bg-gray-50 py-10 px-4">
+      <div className="max-w-4xl mx-auto">
+        {/* ✅ Professional Header */}
+        <header className="relative flex flex-col items-center text-center mb-10">
+          <div className="flex items-center justify-center gap-4 mb-3">
+            <img
+              src="/assets/btm.png"
+              alt="BTM Logo"
+              className="h-14 w-auto drop-shadow-md"
+            />
+            <div className="text-left">
+              <h1 className="text-3xl font-extrabold tracking-tight text-[#E86700]">
+                BTM Airport Services Feedback
+              </h1>
+            </div>
+          </div>
+
+          {/* Decorative line under header */}
+          <div className="w-24 h-1 bg-[#E86700] rounded-full mt-2"></div>
+        </header>
+
+        {/* ✅ Form */}
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <Card>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+            {/* Service Type Card */}
+            <Card className="shadow-sm border-t-4 border-[#E86700]">
               <CardHeader>
-                <CardTitle>General Information</CardTitle>
+                <CardTitle className="text-[#E86700]">Service Type</CardTitle>
               </CardHeader>
-              <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <CardContent>
                 <FormField
                   control={form.control}
-                  name="date"
+                  name="serviceType"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Date</FormLabel>
+                      <FormLabel className="font-medium text-gray-700">
+                        Did you book BTM protocol service for?
+                      </FormLabel>
                       <FormControl>
-                        <Input type="date" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="flight"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Flight</FormLabel>
-                      <FormControl>
-                        <Input placeholder="e.g., BA123" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="time"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Time</FormLabel>
-                      <FormControl>
-                        <Input type="time" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="protocolOfficer"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Protocol Officer</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Officer name" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="passengerName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Passenger Name</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Full name" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="company"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Company</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Company name" {...field} />
+                        <RadioGroup
+                          onValueChange={field.onChange}
+                          value={field.value}
+                          className="flex gap-6 mt-2"
+                        >
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem
+                              value="arrival"
+                              id="arrival"
+                              className="text-[#E86700]"
+                            />
+                            <label
+                              htmlFor="arrival"
+                              className="cursor-pointer text-gray-700"
+                            >
+                              Arrival
+                            </label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem
+                              value="departure"
+                              id="departure"
+                              className="text-[#E86700]"
+                            />
+                            <label
+                              htmlFor="departure"
+                              className="cursor-pointer text-gray-700"
+                            >
+                              Departure
+                            </label>
+                          </div>
+                        </RadioGroup>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -213,59 +217,51 @@ const BTMLogbookForm = () => {
               </CardContent>
             </Card>
 
-            {/* Arrivals Section */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Arrivals</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <FormField
-                  control={form.control}
-                  name="meetingLocation"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>
-                        Where Were You Met By The Protocol Officer?
-                      </FormLabel>
-                      <FormControl>
-                        <RadioGroup
-                          onValueChange={field.onChange}
-                          value={field.value}
-                          className="grid grid-cols-2 md:grid-cols-4 gap-4"
-                        >
-                          {[
-                            "At Tunnel",
-                            "At Staircase",
-                            "At Immigrations",
-                            "At Carousel",
-                            "Outside Airport",
-                            "Inside Airport",
-                            "Other",
-                          ].map((option) => (
-                            <div
-                              key={option}
-                              className="flex items-center space-x-2"
-                            >
+            {/* ✅ Arrival Section */}
+            {selectedService === "arrival" && (
+              <Card className="shadow-sm border-t-4 border-[#E86700]">
+                <CardHeader>
+                  <CardTitle className="text-[#E86700]">Arrival</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <FormField
+                    control={form.control}
+                    name="meetingLocation"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>
+                          Were you met by the Protocol Officer?
+                        </FormLabel>
+                        <FormControl>
+                          <RadioGroup
+                            onValueChange={field.onChange}
+                            value={field.value}
+                            className="flex gap-4 mt-2"
+                          >
+                            <div className="flex items-center space-x-2">
                               <RadioGroupItem
-                                value={option}
-                                id={`arrival-${option}`}
+                                value="yes"
+                                id="met-yes"
+                                className="text-[#E86700]"
                               />
-                              <Label
-                                htmlFor={`arrival-${option}`}
-                                className="cursor-pointer"
-                              >
-                                {option}
-                              </Label>
+                              <label htmlFor="met-yes">Yes</label>
                             </div>
-                          ))}
-                        </RadioGroup>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem
+                                value="no"
+                                id="met-no"
+                                className="text-[#E86700]"
+                              />
+                              <label htmlFor="met-no">No</label>
+                            </div>
+                          </RadioGroup>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Luggage No */}
                   <FormField
                     control={form.control}
                     name="luggageNo"
@@ -276,446 +272,257 @@ const BTMLogbookForm = () => {
                           <Input
                             placeholder="Enter luggage number"
                             {...field}
+                            className="border border-gray-300 rounded-md hover:border-[#E86700] focus:outline-none focus:ring-0 focus:border-[#E86700]"
                           />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-                </div>
 
-                <FormField
-                  control={form.control}
-                  name="baggageAssistance"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Was Baggage Assistance Provided?</FormLabel>
-                      <FormControl>
-                        <RadioGroup
-                          onValueChange={field.onChange}
-                          value={field.value}
-                          className="flex gap-4"
-                        >
-                          <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="yes" id="baggage-yes" />
-                            <Label
-                              htmlFor="baggage-yes"
-                              className="cursor-pointer"
-                            >
-                              Yes
-                            </Label>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="no" id="baggage-no" />
-                            <Label
-                              htmlFor="baggage-no"
-                              className="cursor-pointer"
-                            >
-                              No
-                            </Label>
-                          </div>
-                        </RadioGroup>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="handoverToDriver"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Handover To Driver</FormLabel>
-                      <FormControl>
-                        <RadioGroup
-                          onValueChange={field.onChange}
-                          value={field.value}
-                          className="flex gap-4"
-                        >
-                          <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="yes" id="handover-yes" />
-                            <Label
-                              htmlFor="handover-yes"
-                              className="cursor-pointer"
-                            >
-                              Yes
-                            </Label>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="no" id="handover-no" />
-                            <Label
-                              htmlFor="handover-no"
-                              className="cursor-pointer"
-                            >
-                              No
-                            </Label>
-                          </div>
-                        </RadioGroup>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="arrivalComment"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Comment & Rating</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="Enter your comments here..."
-                          className="resize-none"
-                          rows={4}
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="arrivalRating"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Rating</FormLabel>
-                      <FormControl>
-                        <RadioGroup
-                          onValueChange={field.onChange}
-                          value={field.value}
-                          className="flex gap-4"
-                        >
-                          {[1, 2, 3, 4, 5].map((rating) => (
-                            <div
-                              key={rating}
-                              className="flex items-center space-x-2"
-                            >
-                              <RadioGroupItem
-                                value={rating.toString()}
-                                id={`rating-${rating}`}
-                              />
-                              <Label
-                                htmlFor={`rating-${rating}`}
-                                className="cursor-pointer"
-                              >
-                                {rating}
-                              </Label>
-                            </div>
-                          ))}
-                        </RadioGroup>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </CardContent>
-            </Card>
-
-            {/* Departures Section */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Departure</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <FormField
-                  control={form.control}
-                  name="protocolOfficerMeet"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Did Protocol Officer Meet?</FormLabel>
-                      <FormControl>
-                        <RadioGroup
-                          onValueChange={field.onChange}
-                          value={field.value}
-                          className="flex gap-4"
-                        >
-                          <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="yes" id="officer-meet-yes" />
-                            <Label
-                              htmlFor="officer-meet-yes"
-                              className="cursor-pointer"
-                            >
-                              Yes
-                            </Label>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="no" id="officer-meet-no" />
-                            <Label
-                              htmlFor="officer-meet-no"
-                              className="cursor-pointer"
-                            >
-                              No
-                            </Label>
-                          </div>
-                        </RadioGroup>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="meetingPlace"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>
-                        Where Did Protocol Officer Meet You?
-                      </FormLabel>
-                      <FormControl>
-                        <RadioGroup
-                          onValueChange={field.onChange}
-                          value={field.value}
-                          className="flex gap-4"
-                        >
-                          <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="inside" id="meet-inside" />
-                            <Label
-                              htmlFor="meet-inside"
-                              className="cursor-pointer"
-                            >
-                              Inside
-                            </Label>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="outside" id="meet-outside" />
-                            <Label
-                              htmlFor="meet-outside"
-                              className="cursor-pointer"
-                            >
-                              Outside
-                            </Label>
-                          </div>
-                        </RadioGroup>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="immigrationFormProvided"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>
-                        Did Protocol Officer Provide Immigration Form?
-                      </FormLabel>
-                      <FormControl>
-                        <RadioGroup
-                          onValueChange={field.onChange}
-                          value={field.value}
-                          className="flex gap-4"
-                        >
-                          <div className="flex items-center space-x-2">
-                            <RadioGroupItem
-                              value="yes"
-                              id="immigration-form-yes"
-                            />
-                            <Label
-                              htmlFor="immigration-form-yes"
-                              className="cursor-pointer"
-                            >
-                              Yes
-                            </Label>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <RadioGroupItem
-                              value="no"
-                              id="immigration-form-no"
-                            />
-                            <Label
-                              htmlFor="immigration-form-no"
-                              className="cursor-pointer"
-                            >
-                              No
-                            </Label>
-                          </div>
-                        </RadioGroup>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="fastTrackProvided"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>
-                        Was Immigration Fast Track Provided?
-                      </FormLabel>
-                      <FormControl>
-                        <RadioGroup
-                          onValueChange={field.onChange}
-                          value={field.value}
-                          className="flex gap-4"
-                        >
-                          <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="yes" id="fast-track-yes" />
-                            <Label
-                              htmlFor="fast-track-yes"
-                              className="cursor-pointer"
-                            >
-                              Yes
-                            </Label>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="no" id="fast-track-no" />
-                            <Label
-                              htmlFor="fast-track-no"
-                              className="cursor-pointer"
-                            >
-                              No
-                            </Label>
-                          </div>
-                        </RadioGroup>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="meetGreetLevel"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Level Of Meet And Greet</FormLabel>
-                      <FormControl>
-                        <RadioGroup
-                          onValueChange={field.onChange}
-                          value={field.value}
-                          className="flex gap-4"
-                        >
-                          <div className="flex items-center space-x-2">
-                            <RadioGroupItem
-                              value="standard"
-                              id="level-standard"
-                            />
-                            <Label
-                              htmlFor="level-standard"
-                              className="cursor-pointer"
-                            >
-                              Standard
-                            </Label>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="vip" id="level-vip" />
-                            <Label
-                              htmlFor="level-vip"
-                              className="cursor-pointer"
-                            >
-                              VIP
-                            </Label>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="vvip" id="level-vvip" />
-                            <Label
-                              htmlFor="level-vvip"
-                              className="cursor-pointer"
-                            >
-                              VVIP
-                            </Label>
-                          </div>
-                        </RadioGroup>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="handoverToAirside"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>
-                        Passenger Handed over to Airside Officer
-                      </FormLabel>
-                      <FormControl>
-                        <RadioGroup
-                          onValueChange={field.onChange}
-                          value={field.value}
-                          className="flex gap-4"
-                        >
-                          <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="yes" id="airside-yes" />
-                            <Label
-                              htmlFor="airside-yes"
-                              className="cursor-pointer"
-                            >
-                              Yes
-                            </Label>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="no" id="airside-no" />
-                            <Label
-                              htmlFor="airside-no"
-                              className="cursor-pointer"
-                            >
-                              No
-                            </Label>
-                          </div>
-                        </RadioGroup>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Comment */}
                   <FormField
                     control={form.control}
-                    name="airsideOfficerName"
+                    name="arrivalComment"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Airside Officer Name</FormLabel>
+                        <FormLabel>Comment</FormLabel>
                         <FormControl>
-                          <Input placeholder="Officer name" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="airsideOfficerTel"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Airside Officer Tel No.</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="tel"
-                            placeholder="Phone number"
+                          <Textarea
+                            placeholder="Enter your comments here..."
+                            rows={4}
                             {...field}
+                            className="border border-gray-300 rounded-md hover:border-[#E86700] focus:outline-none focus:ring-0 focus:border-[#E86700]"
                           />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-                </div>
-              </CardContent>
-            </Card>
 
+                  {/* ✅ Emoji Rating (Arrival) */}
+                  <FormField
+                    control={form.control}
+                    name="arrivalRating"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Rating (1 = Worst, 5 = Excellent)</FormLabel>
+                        <FormControl>
+                          <RadioGroup
+                            onValueChange={field.onChange}
+                            value={field.value}
+                            className="flex justify-between max-w-sm mt-2"
+                          >
+                            {[
+                              { num: 1, icon: "😡" },
+                              { num: 2, icon: "😞" },
+                              { num: 3, icon: "😐" },
+                              { num: 4, icon: "😊" },
+                              { num: 5, icon: "😍" },
+                            ].map(({ num, icon }) => (
+                              <div
+                                key={num}
+                                className="flex flex-col items-center space-y-1"
+                              >
+                                <RadioGroupItem
+                                  value={num.toString()}
+                                  id={`rating-${num}`}
+                                  className="text-[#E86700] focus:ring-[#E86700]"
+                                />
+                                <label
+                                  htmlFor={`rating-${num}`}
+                                  className="text-xl"
+                                >
+                                  {icon}
+                                </label>
+                              </div>
+                            ))}
+                          </RadioGroup>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </CardContent>
+              </Card>
+            )}
+
+            {/* ✅ Departure Section */}
+            {/* ✅ Departure Section */}
+            {selectedService === "departure" && (
+              <Card className="shadow-sm border-t-4 border-[#E86700]">
+                <CardHeader>
+                  <CardTitle className="text-[#E86700]">Departure</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  {/* Did protocol officer meet you? */}
+                  <FormField
+                    control={form.control}
+                    name="protocolOfficerMeet"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Did protocol officer meet you?</FormLabel>
+                        <FormControl>
+                          <RadioGroup
+                            onValueChange={field.onChange}
+                            value={field.value}
+                            className="flex gap-4 mt-2"
+                          >
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem
+                                value="yes"
+                                id="departure-meet-yes"
+                                className="text-[#E86700]"
+                              />
+                              <label htmlFor="departure-meet-yes">Yes</label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem
+                                value="no"
+                                id="departure-meet-no"
+                                className="text-[#E86700]"
+                              />
+                              <label htmlFor="departure-meet-no">No</label>
+                            </div>
+                          </RadioGroup>
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Immigration Assistance */}
+                  <FormField
+                    control={form.control}
+                    name="immigrationAssistance"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>
+                          Were you assisted through immigration?
+                        </FormLabel>
+                        <FormControl>
+                          <RadioGroup
+                            onValueChange={field.onChange}
+                            value={field.value}
+                            className="flex gap-4 mt-2"
+                          >
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem
+                                value="yes"
+                                id="immigration-yes"
+                                className="text-[#E86700]"
+                              />
+                              <label htmlFor="immigration-yes">Yes</label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem
+                                value="no"
+                                id="immigration-no"
+                                className="text-[#E86700]"
+                              />
+                              <label htmlFor="immigration-no">No</label>
+                            </div>
+                          </RadioGroup>
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Immigration Type — only if yes */}
+                  {form.watch("immigrationAssistance") === "yes" && (
+                    <FormField
+                      control={form.control}
+                      name="meetGreetLevel"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Immigration Assistance Type</FormLabel>
+                          <FormControl>
+                            <RadioGroup
+                              onValueChange={field.onChange}
+                              value={field.value}
+                              className="flex gap-6 mt-2"
+                            >
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem
+                                  value="standard"
+                                  id="standard"
+                                  className="text-[#E86700]"
+                                />
+                                <label htmlFor="standard">Standard</label>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem
+                                  value="vip"
+                                  id="vip"
+                                  className="text-[#E86700]"
+                                />
+                                <label htmlFor="vip">VIP</label>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem
+                                  value="vvip"
+                                  id="vvip"
+                                  className="text-[#E86700]"
+                                />
+                                <label htmlFor="vvip">VVIP</label>
+                              </div>
+                            </RadioGroup>
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* ✅ Submit Button */}
             <div className="flex justify-end">
               <Button
                 type="submit"
                 size="lg"
-                className="w-full md:w-auto"
+                className="bg-[#E86700] hover:bg-[#cf5900] transition-colors"
                 disabled={isSubmitting}
               >
-                {isSubmitting ? "Submitting..." : "Submit Logbook Entry"}
+                {isSubmitting ? "Submitting..." : "Submit Feedback"}
               </Button>
             </div>
           </form>
         </Form>
+
+        {/* Success Dialog */}
+        <Dialog open={showSuccess} onOpenChange={setShowSuccess}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="text-[#E86700]">
+                🎉 Thank you!
+              </DialogTitle>
+            </DialogHeader>
+            <p>
+              Thank you very much for filling our form. Would you like to book
+              your next airport assistance?
+            </p>
+            <DialogFooter className="flex justify-end space-x-2">
+              <Button
+                onClick={() => setShowSuccess(false)}
+                className="bg-[#E86700] hover:bg-[#cf5900]"
+              >
+                No
+              </Button>
+              <Button
+                className="bg-[#E86700] hover:bg-[#cf5900]"
+                onClick={() => {
+                  setShowSuccess(false);
+                  window.open(
+                    "https://airport-protocol.onrender.com/",
+                    "_blank"
+                  );
+                }}
+              >
+                Yes
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
