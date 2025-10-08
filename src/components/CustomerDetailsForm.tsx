@@ -1,0 +1,255 @@
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { useState } from "react";
+import axios from "axios";
+import { toast } from "@/hooks/use-toast";
+
+const formSchema = z.object({
+  passengerName: z.string().min(1, "Passenger name is required"),
+  contact: z.string().min(1, "Contact is required"),
+  email: z.string().email("Invalid email"),
+  protocolOfficer: z.string().min(1, "Assigned protocol officer is required"),
+
+  badgeVerification: z.enum(["yes", "no"]).refine((val) => val !== undefined, {
+    message: "Please select badge verification",
+  }),
+
+  checkInIssues: z.enum(["yes", "no"]).refine((val) => val !== undefined, {
+    message: "Please select if there were any issues",
+  }),
+});
+
+export default function CheckInReportForm() {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      passengerName: "",
+      contact: "",
+      email: "",
+      protocolOfficer: "",
+      badgeVerification: undefined,
+      checkInIssues: undefined,
+    } as any,
+  });
+
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    try {
+      setIsSubmitting(true);
+      const response = await axios.post(
+        // "http://localhost:5000/api/customer",
+        "https://airport-protocol.onrender.com/api/customer",
+        values
+      );
+      if (response.data.success) {
+        toast({
+          title: "Customer details is Successfully",
+          description: "Your customer details have been recorded.",
+        });
+        form.reset();
+      } else {
+        toast({
+          title: "Submission Failed",
+          description: response.data.message || "Something went wrong.",
+          variant: "destructive",
+        });
+      }
+    } catch (error: any) {
+      toast({
+        title: "Server Error",
+        description: "Could not connect to the server.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50 py-10 px-4">
+      <div className="max-w-3xl mx-auto">
+        {/* ✅ Elegant Header */}
+        <header className="relative flex flex-col items-center text-center mb-10 rounded-xl border border-gray-400 bg-gradient-to-b from-white to-gray-100 shadow-sm p-6">
+          <div className="flex items-center justify-center gap-4 mb-3">
+            <img
+              src="/assets/btm.png"
+              alt="BTM Logo"
+              className="h-14 w-auto drop-shadow-sm"
+            />
+            <div className="text-left">
+              <h1 className="text-3xl font-extrabold tracking-tight text-primary">
+                Customer Details Form
+              </h1>
+              <p className="text-sm text-gray-500 mt-1">
+                Please fill out this form for each passenger
+              </p>
+            </div>
+          </div>
+          <div className="w-32 h-[2px] bg-gradient-to-r from-transparent via-gray-500 to-transparent rounded-full"></div>
+        </header>
+
+        {/* ✅ Form */}
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+            <Card className="shadow-sm border border-gray-300">
+              <CardHeader>
+                <CardTitle className="text-primary">
+                  Passenger Information
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Passenger Name */}
+                <FormField
+                  control={form.control}
+                  name="passengerName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Passenger Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter passenger name" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Contact */}
+                <FormField
+                  control={form.control}
+                  name="contact"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Contact</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter contact" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Email */}
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="email"
+                          placeholder="Enter email"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Protocol Officer */}
+                <FormField
+                  control={form.control}
+                  name="protocolOfficer"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>
+                        Assigned Protocol Officer (BTM & Partner)
+                      </FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter officer name" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Badge Verification */}
+                <FormField
+                  control={form.control}
+                  name="badgeVerification"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Badge Verification</FormLabel>
+                      <FormControl>
+                        <RadioGroup
+                          onValueChange={field.onChange}
+                          value={field.value}
+                          className="flex gap-6 mt-2"
+                        >
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="yes" id="badge-yes" />
+                            <label htmlFor="badge-yes">Yes</label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="no" id="badge-no" />
+                            <label htmlFor="badge-no">No</label>
+                          </div>
+                        </RadioGroup>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Check-in Issues */}
+                <FormField
+                  control={form.control}
+                  name="checkInIssues"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Any issues during check-in?</FormLabel>
+                      <FormControl>
+                        <RadioGroup
+                          onValueChange={field.onChange}
+                          value={field.value}
+                          className="flex gap-6 mt-2"
+                        >
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="yes" id="issues-yes" />
+                            <label htmlFor="issues-yes">Yes</label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="no" id="issues-no" />
+                            <label htmlFor="issues-no">No</label>
+                          </div>
+                        </RadioGroup>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </CardContent>
+            </Card>
+
+            {/* Submit */}
+            <div className="flex justify-end">
+              <Button
+                type="submit"
+                size="lg"
+                className="bg-primary hover:bg-[hsl(240_4%_80%)] text-black"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? "Submitting..." : "Submit Report"}
+              </Button>
+            </div>
+          </form>
+        </Form>
+      </div>
+    </div>
+  );
+}

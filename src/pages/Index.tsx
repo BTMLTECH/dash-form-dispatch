@@ -1,7 +1,7 @@
-import BTMLogbookForm from "@/components/BTMLogbookForm";
+import { BookingForm } from "@/components/BTMLogbookForm";
 
 const Index = () => {
-  return <BTMLogbookForm />;
+  return <BookingForm />;
 };
 
 export default Index;
