@@ -16,21 +16,53 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { useState } from "react";
 import axios from "axios";
 import { toast } from "@/hooks/use-toast";
+import { api } from "@/lib/api";
 
-const formSchema = z.object({
-  passengerName: z.string().min(1, "Passenger name is required"),
-  contact: z.string().min(1, "Contact is required"),
-  email: z.string().email("Invalid email"),
-  protocolOfficer: z.string().min(1, "Assigned protocol officer is required"),
+// const formSchema = z.object({
+//   passengerName: z.string().min(1, "Passenger name is required"),
+//   contact: z.string().min(1, "Contact is required"),
+//   email: z.string().email("Invalid email"),
+//   protocolOfficer: z.string().min(1, "Assigned protocol officer is required"),
 
-  badgeVerification: z.enum(["yes", "no"]).refine((val) => val !== undefined, {
-    message: "Please select badge verification",
-  }),
+//   badgeVerification: z.enum(["yes", "no"]).refine((val) => val !== undefined, {
+//     message: "Please select badge verification",
+//   }),
 
-  checkInIssues: z.enum(["yes", "no"]).refine((val) => val !== undefined, {
-    message: "Please select if there were any issues",
-  }),
-});
+//   checkInIssues: z.enum(["yes", "no"]).refine((val) => val !== undefined, {
+//     message: "Please select if there were any issues",
+//   })
+// });
+const formSchema = z
+  .object({
+    passengerName: z.string().min(1, "Passenger name is required"),
+    contact: z.string().min(1, "Contact is required"),
+    email: z.string().email("Invalid email"),
+    protocolOfficer: z.string().min(1, "Assigned protocol officer is required"),
+
+    badgeVerification: z
+      .enum(["yes", "no"])
+      .refine((val) => val !== undefined, {
+        message: "Please select badge verification",
+      }),
+
+    checkInIssues: z.enum(["yes", "no"]).refine((val) => val !== undefined, {
+      message: "Please select if there were any issues",
+    }),
+
+    checkInComment: z.string().optional(),
+  })
+  .refine(
+    (data) => {
+      if (data.checkInIssues === "yes") {
+        return data.checkInComment && data.checkInComment.trim().length > 0;
+      }
+      return true;
+    },
+    {
+      path: ["checkInComment"],
+      message: "Please provide details about the check-in issues",
+    }
+  );
 
 export default function CheckInReportForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -44,17 +76,19 @@ export default function CheckInReportForm() {
       protocolOfficer: "",
       badgeVerification: undefined,
       checkInIssues: undefined,
+      checkInComment: "",
     } as any,
   });
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
       setIsSubmitting(true);
-      const response = await axios.post(
-        // "http://localhost:5000/api/customer",
-        "https://airport-protocol.onrender.com/api/customer",
-        values
-      );
+      const response = await api.submitCustomerDetails(values, "customer");
+      //   await axios.post(
+      //   // "http://localhost:5000/api/customer",
+      //   "https://airport-protocol.onrender.com/api/customer",
+      //   values
+      // );
       if (response.data.success) {
         toast({
           title: "Customer details is Successfully",
@@ -133,9 +167,11 @@ export default function CheckInReportForm() {
                   name="contact"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Contact</FormLabel>
+                      <FormLabel>
+                        Contact Number (Include country code)
+                      </FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter contact" {...field} />
+                        <Input placeholder="+1 234 567 3509" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -148,7 +184,7 @@ export default function CheckInReportForm() {
                   name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Email</FormLabel>
+                      <FormLabel>Email Address</FormLabel>
                       <FormControl>
                         <Input
                           type="email"
@@ -168,7 +204,7 @@ export default function CheckInReportForm() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>
-                        Assigned Protocol Officer (BTM & Partner)
+                        Assigned Protocol Officer (BTM & Partner Hc)
                       </FormLabel>
                       <FormControl>
                         <Input placeholder="Enter officer name" {...field} />
@@ -233,6 +269,28 @@ export default function CheckInReportForm() {
                     </FormItem>
                   )}
                 />
+
+                {/* Show comment field only if "Yes" is selected */}
+                {form.watch("checkInIssues") === "yes" && (
+                  <FormField
+                    control={form.control}
+                    name="checkInComment"
+                    render={({ field }) => (
+                      <FormItem className="mt-4">
+                        <FormLabel>Please describe the issue</FormLabel>
+                        <FormControl>
+                          <textarea
+                            {...field}
+                            className="w-full rounded-md border border-gray-300 p-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                            rows={3}
+                            placeholder="Provide details about the check-in issues"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
               </CardContent>
             </Card>
 
@@ -244,7 +302,7 @@ export default function CheckInReportForm() {
                 className="bg-primary hover:bg-[hsl(240_4%_80%)] text-black"
                 disabled={isSubmitting}
               >
-                {isSubmitting ? "Submitting..." : "Submit Report"}
+                {isSubmitting ? "Submitting..." : "Submit Customer"}
               </Button>
             </div>
           </form>

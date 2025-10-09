@@ -1,7 +1,11 @@
 import { BookingForm } from "@/components/BTMLogbookForm";
 
-const Index = () => {
-  return <BookingForm />;
+interface IndexProps {
+  type: "domestic" | "international";
+}
+
+const Index: React.FC<IndexProps> = ({ type }) => {
+  return <BookingForm type={type} key={type} />;
 };
 
 export default Index;

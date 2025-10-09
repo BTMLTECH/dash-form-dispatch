@@ -25,6 +25,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "./ui/dialog";
+import { api } from "@/lib/api";
+import { useNavigate } from "react-router-dom";
 
 export const formSchema = z
   .object({
@@ -44,7 +46,7 @@ export const formSchema = z
     // Departure Section
     protocolOfficerMeet: z.string().optional(),
     immigrationAssistance: z.string().optional(),
-    meetGreetLevel: z.string().optional(),
+    meetInOrOutside: z.string().optional(),
   })
   .superRefine((data, ctx) => {
     // ✅ Conditional validation: only validate the selected service
@@ -78,6 +80,13 @@ export const formSchema = z
           code: "custom",
         });
       }
+      if (!data.meetInOrOutside) {
+        ctx.addIssue({
+          path: ["meetInOrOutside"],
+          message: "Please select an option",
+          code: "custom",
+        });
+      }
     }
   });
 
@@ -86,6 +95,8 @@ type FormData = z.infer<typeof formSchema>;
 const BTMLogbookForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const navigate = useNavigate();
+
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -96,18 +107,20 @@ const BTMLogbookForm = () => {
       arrivalRating: "",
       protocolOfficerMeet: "",
       immigrationAssistance: "",
-      meetGreetLevel: "",
+      meetInOrOutside: "",
     },
   });
   const onSubmit = async (data: FormData) => {
     try {
       setIsSubmitting(true);
 
-      const response = await axios.post(
-        "https://airport-protocol.onrender.com/api/feedback",
-        // "http://localhost:5000/api/feedback",
-        data
-      );
+      const response = await api.submitCustomerDetails(data, "feedback");
+
+      // const response = await axios.post(
+      //   "https://airport-protocol.onrender.com/api/feedback",
+      //   // "http://localhost:5000/api/feedback",
+      //   data
+      // );
 
       if (response.data.success) {
         toast({
@@ -418,9 +431,48 @@ const BTMLogbookForm = () => {
                       </FormItem>
                     )}
                   />
+                  <FormField
+                    control={form.control}
+                    name="meetInOrOutside"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>
+                          Where Did Prorocol Officer Meet You?
+                        </FormLabel>
+                        <FormControl>
+                          <RadioGroup
+                            onValueChange={field.onChange}
+                            value={field.value}
+                            className="flex gap-4 mt-2"
+                          >
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem
+                                value="yes"
+                                id="meetInOrOutside-yes"
+                                className="text-primary"
+                              />
+                              <label htmlFor="meetInOrOutside-yes">
+                                Inside
+                              </label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem
+                                value="no"
+                                id="meetInOrOutside-no"
+                                className="text-primary"
+                              />
+                              <label htmlFor="meetInOrOutside-no">
+                                Outside
+                              </label>
+                            </div>
+                          </RadioGroup>
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
 
                   {/* Immigration Type */}
-                  {form.watch("immigrationAssistance") === "yes" && (
+                  {/* {form.watch("immigrationAssistance") === "yes" && (
                     <FormField
                       control={form.control}
                       name="meetGreetLevel"
@@ -453,7 +505,7 @@ const BTMLogbookForm = () => {
                         </FormItem>
                       )}
                     />
-                  )}
+                  )} */}
                 </CardContent>
               </Card>
             )}
@@ -489,7 +541,7 @@ const BTMLogbookForm = () => {
               >
                 No
               </Button>
-              <Button
+              {/* <Button
                 className="bg-primary hover:bg-[hsl(240_4%_80%)] text-black"
                 onClick={() => {
                   setShowSuccess(false);
@@ -497,6 +549,16 @@ const BTMLogbookForm = () => {
                     "https://airport-protocol.onrender.com/",
                     "_blank"
                   );
+                }}
+              >
+                Yes
+              </Button> */}
+
+              <Button
+                className="bg-primary hover:bg-[hsl(240_4%_80%)] text-black"
+                onClick={() => {
+                  setShowSuccess(false);
+                  navigate("/");
                 }}
               >
                 Yes
