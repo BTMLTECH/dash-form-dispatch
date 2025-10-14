@@ -31,115 +31,173 @@ import { Link } from "react-router-dom";
 import CurrencyToggle from "./CurrencyToggle";
 import { useCurrency } from "@/hooks/CurrencyContext";
 import { api } from "@/lib/api";
+import {
+  primaryServices,
+  additionalServices,
+  referralSources,
+  departureCities,
+  domesticCities,
+  internationalCities,
+} from "@/lib/data";
 
-const departureCities = [
-  "London",
-  "New York",
-  "Dubai",
-  "Paris",
-  "Johannesburg",
-  "Other",
-];
-const domesticCities = [
-  "Lagos",
-  "Abuja",
-  "Port Harcourt",
-  "Kano",
-  "Enugu",
-  "Kaduna",
-  "Owerri",
-  "Benin City",
-  "Ibadan",
-  "Calabar",
-  "Uyo",
-  "Other",
-];
+// export const formSchema = z.object({
+//   fullName: z
+//     .string()
+//     .min(2, "Full name must be at least 2 characters")
+//     .max(100),
+//   email: z.string().email("Invalid email address"),
+//   phone: z.string().min(8, "Please include country code").max(20),
 
-const internationalCities = ["Lagos", "Abuja", "Port Harcourt", "Kano"];
+//   services: z.array(z.string()).min(1, "Please select at least one service"),
 
-export const formSchema = z.object({
-  fullName: z
-    .string()
-    .min(2, "Full name must be at least 2 characters")
-    .max(100),
-  email: z.string().email("Invalid email address"),
-  phone: z.string().min(8, "Please include country code").max(20),
+//   flightDate: z.string().min(1, "Flight date is required"),
+//   flightTime: z.string().min(1, "Flight time is required"),
+//   flightNumber: z
+//     .string()
+//     .min(1, "Airline & flight number is required")
+//     .max(50),
+//   departureCity: z.string().min(1, "Departure city is required"),
+//   arrivalCity: z.string().min(1, "Arrival city is required"),
+//   passengers: z.string().min(1, "Number of passengers is required"),
+//   specialRequests: z.string().optional(),
+//   discountCode: z.string().optional(),
+//   referralSource: z.string().optional(),
 
-  services: z.array(z.string()).min(1, "Please select at least one service"),
+//   // 🆕 Add total price for submission
+//   totalPrice: z.number().min(0, "Total price is required"),
 
-  flightDate: z.string().min(1, "Flight date is required"),
-  flightTime: z.string().min(1, "Flight time is required"),
-  flightNumber: z
-    .string()
-    .min(1, "Airline & flight number is required")
-    .max(50),
-  departureCity: z.string().min(1, "Departure city is required"),
-  arrivalCity: z.string().min(1, "Arrival city is required"),
-  passengers: z.string().min(1, "Number of passengers is required"),
-  specialRequests: z.string().optional(),
-  discountCode: z.string().optional(),
-  referralSource: z.string().optional(),
+//   // 🆕 Optional: include details of services selected
+//   selectedServicesDetails: z
+//     .array(
+//       z.object({
+//         id: z.string(),
+//         label: z.string(),
+//         price: z.number(),
+//       })
+//     )
+//     .optional(),
+// });
 
-  // 🆕 Add total price for submission
-  totalPrice: z.number().min(0, "Total price is required"),
+export const formSchema = z
+  .object({
+    fullName: z
+      .string()
+      .min(2, "Full name must be at least 2 characters")
+      .max(100),
+    email: z.string().email("Invalid email address"),
+    phone: z.string().min(8, "Please include country code").max(20),
 
-  // 🆕 Optional: include details of services selected
-  selectedServicesDetails: z
-    .array(
-      z.object({
-        id: z.string(),
-        label: z.string(),
-        price: z.number(),
-      })
-    )
-    .optional(),
-});
+    services: z.array(z.string()).min(1, "Please select at least one service"),
+
+    flightDate: z.string().min(1, "Flight date is required"),
+    flightTime: z.string().min(1, "Flight time is required"),
+    flightNumber: z
+      .string()
+      .min(1, "Airline & flight number is required")
+      .max(50),
+    departureCity: z.string().min(1, "Departure city is required"),
+    arrivalCity: z.string().min(1, "Arrival city is required"),
+    passengers: z.string().min(1, "Number of passengers is required"),
+
+    specialRequests: z.string().optional(),
+    discountCode: z.string().optional(),
+    referralSource: z.string().optional(),
+
+    // ✅ Return Airport Service section
+    returnService: z.boolean().optional(),
+    returnDate: z.string().optional(),
+    returnFlight: z.string().optional(),
+    returnNotes: z.string().optional(),
+
+    // ✅ Pricing
+    totalPrice: z.number().min(0, "Total price is required"),
+    totalDollarPrice: z.number().optional(),
+
+    // ✅ Include details of selected services
+    selectedServicesDetails: z
+      .array(
+        z.object({
+          id: z.string(),
+          label: z.string(),
+          price: z.number().optional(),
+          dollar: z.number().optional(),
+        })
+      )
+      .optional(),
+  })
+  // ✅ Object-level refinement for conditional validation
+  .refine(
+    (data) => {
+      if (data.returnService && !data.returnDate) {
+        return false;
+      }
+      return true;
+    },
+    {
+      message: "Return date is required if return service is selected",
+      path: ["returnDate"],
+    }
+  );
+
 type FormData = z.infer<typeof formSchema>;
 
-const services = [
-  {
-    id: "standard-meet-greet",
-    label: "Standard Meet and Greet",
-    price: 20000,
-    dollar: 20,
-  },
-  {
-    id: "vip-meet-greet",
-    label: "VIP Meet and Greet",
-    price: 35000,
-    dollar: 40,
-  },
-  { id: "car-hire", label: "Car Hire", price: 30000, dollar: 20 }, // Add real price if needed
-  {
-    id: "airport-transfer",
-    label: "Airport Transfer",
-    price: 30000,
-    dollar: 20,
-  },
-  { id: "lounge-services", label: "Lounge Services", price: 40000, dollar: 20 },
-  {
-    id: "escort-services",
-    label: "Security Escort Vehicle",
-    price: 30000,
-    dollar: 20,
-  },
-];
-
-const referralSources = [
-  "Google Search",
-  "Social Media",
-  "Friend/Family Referral",
-  "Travel Agency",
-  "Previous Customer",
-  "Advertisement",
-  "Other",
-];
+// const services = [
+//   {
+//     id: "standard-meet-greet",
+//     label: "Standard Meet and Greet",
+//     price: 20000,
+//     dollar: 20,
+//   },
+//   {
+//     id: "vip-meet-greet",
+//     label: "VIP Meet and Greet",
+//     price: 35000,
+//     dollar: 40,
+//   },
+//   { id: "car-hire", label: "Car Hire", price: 30000, dollar: 20 }, // Add real price if needed
+//   {
+//     id: "airport-transfer",
+//     label: "Airport Transfer",
+//     price: 30000,
+//     dollar: 20,
+//   },
+//   { id: "lounge-services", label: "Lounge Services", price: 40000, dollar: 20 },
+//   {
+//     id: "escort-services",
+//     label: "Security Escort Vehicle",
+//     price: 30000,
+//     dollar: 20,
+//   },
+// ];
 
 export function BookingForm({ type }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [totalPrice, setTotalPrice] = useState(0);
   const [totalDollarPrice, setTotalDollarPrice] = useState(0);
   const { currency, toggleCurrency } = useCurrency();
+  // const form = useForm<FormData>({
+  //   resolver: zodResolver(formSchema),
+  //   defaultValues: {
+  //     fullName: "",
+  //     email: "",
+  //     phone: "",
+  //     services: [],
+  //     flightDate: "",
+  //     flightTime: "",
+  //     flightNumber: "",
+  //     departureCity: "",
+  //     arrivalCity: "",
+  //     passengers: "",
+  //     specialRequests: "",
+  //     discountCode: "",
+  //     referralSource: "",
+  //     totalPrice: 0,
+  //     selectedServicesDetails: [],
+  //   },
+  // });
+  // const selectedServices = form.watch("services");
+
+  // Choose cities based on type
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -156,13 +214,18 @@ export function BookingForm({ type }) {
       specialRequests: "",
       discountCode: "",
       referralSource: "",
+      returnService: false,
+      returnDate: "",
+      returnFlight: "",
+      returnNotes: "",
       totalPrice: 0,
+      totalDollarPrice: 0,
       selectedServicesDetails: [],
     },
   });
+
   const selectedServices = form.watch("services");
 
-  // Choose cities based on type
   const arrivalCities =
     type === "domestic" ? domesticCities : internationalCities;
 
@@ -174,21 +237,68 @@ export function BookingForm({ type }) {
   //   setTotalPrice(total);
   // }, [selectedServices]);
   useEffect(() => {
+    // Calculate total for selected primary services
     const totalNGN =
       selectedServices?.reduce((acc, serviceId) => {
-        const svc = services.find((s) => s.id === serviceId);
+        const svc = primaryServices.find((s) => s.id === serviceId);
         return acc + (svc?.price || 0);
       }, 0) || 0;
 
     const totalUSD =
       selectedServices?.reduce((acc, serviceId) => {
-        const svc = services.find((s) => s.id === serviceId);
+        const svc = primaryServices.find((s) => s.id === serviceId);
         return acc + (svc?.dollar || 0);
       }, 0) || 0;
 
-    setTotalPrice(totalNGN);
-    setTotalDollarPrice(totalUSD);
-  }, [selectedServices]);
+    // ✅ Apply 10% discount if return airport service selected
+    const isReturnService = form.watch("returnService");
+    const discountFactor = isReturnService ? 0.9 : 1; // 10% off
+
+    const discountedNGN = totalNGN * discountFactor;
+    const discountedUSD = totalUSD * discountFactor;
+
+    setTotalPrice(discountedNGN);
+    setTotalDollarPrice(discountedUSD);
+
+    // ✅ Sync with form state
+    form.setValue("totalPrice", discountedNGN);
+    form.setValue("totalDollarPrice", discountedUSD);
+  }, [selectedServices, form.watch("returnService")]);
+
+  // useEffect(() => {
+  //   // Only include primary services in total calculation
+  //   const totalNGN =
+  //     selectedServices?.reduce((acc, serviceId) => {
+  //       const svc = primaryServices.find((s) => s.id === serviceId);
+  //       return acc + (svc?.price || 0);
+  //     }, 0) || 0;
+
+  //   const totalUSD =
+  //     selectedServices?.reduce((acc, serviceId) => {
+  //       const svc = primaryServices.find((s) => s.id === serviceId);
+  //       return acc + (svc?.dollar || 0);
+  //     }, 0) || 0;
+
+  //   setTotalPrice(totalNGN);
+  //   setTotalDollarPrice(totalUSD);
+  // }, [selectedServices]);
+
+  // useEffect(() => {
+  //   const totalNGN =
+  //     selectedServices?.reduce((acc, serviceId) => {
+  //       const svc = services.find((s) => s.id === serviceId);
+  //       return acc + (svc?.price || 0);
+  //     }, 0) || 0;
+
+  //   const totalUSD =
+  //     selectedServices?.reduce((acc, serviceId) => {
+  //       const svc = services.find((s) => s.id === serviceId);
+  //       return acc + (svc?.dollar || 0);
+  //     }, 0) || 0;
+
+  //   setTotalPrice(totalNGN);
+  //   setTotalDollarPrice(totalUSD);
+  // }, [selectedServices]);
 
   // const onSubmit = async (data: FormData) => {
   //   try {
@@ -239,13 +349,28 @@ export function BookingForm({ type }) {
     try {
       setIsSubmitting(true);
 
-      const selectedDetails = services.filter((service) =>
+      // Separate primary and additional services
+      const selectedPrimary = primaryServices.filter((service) =>
         data.services.includes(service.id)
       );
-      const totalPrice = selectedDetails.reduce(
+
+      const selectedAdditional = additionalServices.filter((service) =>
+        data.services.includes(service.id)
+      );
+
+      // Calculate total price from primary services
+      let totalPrice = selectedPrimary.reduce(
         (acc, service) => acc + service.price,
         0
       );
+
+      // ✅ Apply 10% discount if return airport service is selected
+      if (data.returnService) {
+        totalPrice = totalPrice * 0.9;
+      }
+
+      // Combine all selected services for reference
+      const selectedDetails = [...selectedPrimary, ...selectedAdditional];
 
       const payload = {
         ...data,
@@ -254,19 +379,7 @@ export function BookingForm({ type }) {
         type,
       };
 
-      await api.submitCustomerDetails(data, "booking");
-
-      // const response = await axios.post(
-      //   // In production, use your deployed server URL
-      //   // "https://airport-server-onj2.onrender.com/api/booking",
-      //   "http://localhost:5000/api/booking",
-      //   payload,
-      //   {
-      //     headers: {
-      //       "Content-Type": "application/json",
-      //     },
-      //   }
-      // );
+      await api.submitCustomerDetails(payload, "booking");
 
       toast.success("Booking request submitted successfully!", {
         description:
@@ -282,6 +395,100 @@ export function BookingForm({ type }) {
       setIsSubmitting(false);
     }
   };
+
+  // const onSubmit = async (data: FormData) => {
+  //   try {
+  //     setIsSubmitting(true);
+
+  //     // Separate primary and additional services
+  //     const selectedPrimary = primaryServices.filter((service) =>
+  //       data.services.includes(service.id)
+  //     );
+
+  //     const selectedAdditional = additionalServices.filter((service) =>
+  //       data.services.includes(service.id)
+  //     );
+
+  //     // Only calculate total price from primary services
+  //     const totalPrice = selectedPrimary.reduce(
+  //       (acc, service) => acc + service.price,
+  //       0
+  //     );
+
+  //     // Combine all selected services for reference
+  //     const selectedDetails = [...selectedPrimary, ...selectedAdditional];
+
+  //     const payload = {
+  //       ...data,
+  //       totalPrice,
+  //       selectedServicesDetails: selectedDetails,
+  //       type,
+  //     };
+
+  //     await api.submitCustomerDetails(data, "booking");
+
+  //     toast.success("Booking request submitted successfully!", {
+  //       description:
+  //         "Our team will contact you shortly to confirm your booking.",
+  //     });
+
+  //     form.reset();
+  //   } catch (error: any) {
+  //     toast.error("Failed to submit booking request", {
+  //       description: error.response?.data?.message || error.message,
+  //     });
+  //   } finally {
+  //     setIsSubmitting(false);
+  //   }
+  // };
+
+  // const onSubmit = async (data: FormData) => {
+  //   try {
+  //     setIsSubmitting(true);
+
+  //     const selectedDetails = services.filter((service) =>
+  //       data.services.includes(service.id)
+  //     );
+  //     const totalPrice = selectedDetails.reduce(
+  //       (acc, service) => acc + service.price,
+  //       0
+  //     );
+
+  //     const payload = {
+  //       ...data,
+  //       totalPrice,
+  //       selectedServicesDetails: selectedDetails,
+  //       type,
+  //     };
+
+  //     await api.submitCustomerDetails(data, "booking");
+
+  //     // const response = await axios.post(
+  //     //   // In production, use your deployed server URL
+  //     //   // "https://airport-server-onj2.onrender.com/api/booking",
+  //     //   "http://localhost:5000/api/booking",
+  //     //   payload,
+  //     //   {
+  //     //     headers: {
+  //     //       "Content-Type": "application/json",
+  //     //     },
+  //     //   }
+  //     // );
+
+  //     toast.success("Booking request submitted successfully!", {
+  //       description:
+  //         "Our team will contact you shortly to confirm your booking.",
+  //     });
+
+  //     form.reset();
+  //   } catch (error: any) {
+  //     toast.error("Failed to submit booking request", {
+  //       description: error.response?.data?.message || error.message,
+  //     });
+  //   } finally {
+  //     setIsSubmitting(false);
+  //   }
+  // };
 
   return (
     <div className="min-h-screen bg-gray-50 py-10 px-4">
@@ -311,18 +518,24 @@ export function BookingForm({ type }) {
           <div className="w-32 h-[2px] bg-gradient-to-r from-transparent via-gray-500 to-transparent rounded-full"></div>
         </header>
         {type === "domestic" && (
-          <div className="mb-8 p-4 bg-gray-100 border border-gray-300 rounded-lg text-center">
-            <p className="font-bold text-gray-800">
+          <div
+            className="mb-8 p-4 border border-gray-300 rounded-lg text-center"
+            style={{ background: "var(--metal-gradient)" }}
+          >
+            <p className="font-bold text-black">
               NOTE: This booking process is for{" "}
-              <span className="text-primary">Nigeria airports only.</span>
+              <span style={{ color: "var(--brand-color)" }}>
+                Domestic Airports in Nigeria only.
+              </span>
             </p>
-            <p className="mt-2">
+            <p className="mt-2 text-gray-900">
               For any airport protocol booking outside Nigeria,{" "}
               <a
                 href="/international"
-                className="text-primary font-semibold underline hover:text-primary/80 transition-colors"
+                style={{ color: "var(--brand-color)", textDecoration: "none" }}
+                className="font-semibold hover:opacity-80 transition-opacity"
               >
-                click here
+                Click Here
               </a>
               .
             </p>
@@ -551,7 +764,7 @@ export function BookingForm({ type }) {
                 )}
               </div>
             </div>
-            {type === "domestic" && (
+            {(type === "domestic" || type === "international") && (
               <>
                 <div className="space-y-6">
                   <h3 className="text-xl font-semibold text-foreground">
@@ -632,29 +845,152 @@ export function BookingForm({ type }) {
                   </div>
                 </div>
 
+                {/* ✅ Return Airport Service Section */}
+                <div className="mt-6 border rounded-lg p-6 bg-gray-50">
+                  <h3 className="text-lg font-semibold text-primary">
+                    Return Airport Service
+                  </h3>
+
+                  <FormField
+                    control={form.control}
+                    name="returnService"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <div className="flex items-center gap-3 mt-2">
+                            <Checkbox
+                              checked={field.value || false}
+                              onCheckedChange={field.onChange}
+                              id="return-service"
+                            />
+                            <label
+                              htmlFor="return-service"
+                              className="text-gray-700"
+                            >
+                              I would like to book my return airport service
+                              (10% discount)
+                            </label>
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {form.watch("returnService") && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                      <FormField
+                        control={form.control}
+                        name="returnDate"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Return Date</FormLabel>
+                            <FormControl>
+                              <Input type="date" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="returnFlight"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Return Flight Number</FormLabel>
+                            <FormControl>
+                              <Input placeholder="e.g. BA123" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="returnNotes"
+                        render={({ field }) => (
+                          <FormItem className="md:col-span-2">
+                            <FormLabel>Additional Notes (optional)</FormLabel>
+                            <FormControl>
+                              <Textarea
+                                {...field}
+                                placeholder="Add any special requests or return details..."
+                                className="min-h-[80px]"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  )}
+                </div>
+
                 <div className="space-y-6">
+                  {/* Type of Service Section */}
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
                     <h3 className="text-xl font-semibold text-foreground flex items-center gap-2">
                       <Plane className="h-5 w-5 text-primary" />
                       Type of Service
                     </h3>
-
-                    {/* ✅ Currency Toggle Button */}
                     <CurrencyToggle />
                   </div>
 
-                  <FormDescription>
+                  {/* Primary Services */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mt-4">
+                    {primaryServices.map((service) => {
+                      const isSelected = selectedServices?.includes(service.id);
+
+                      return (
+                        <FormField
+                          key={service.id}
+                          control={form.control}
+                          name="services"
+                          render={({ field }) => (
+                            <div
+                              className={`relative border rounded-xl p-4 cursor-pointer transition-all ${
+                                isSelected
+                                  ? "border-primary bg-gray-50 shadow-md"
+                                  : "border-gray-300 hover:border-primary/50 hover:shadow-sm"
+                              }`}
+                              onClick={() => {
+                                if (isSelected) {
+                                  field.onChange([]);
+                                } else {
+                                  field.onChange([service.id]);
+                                }
+                              }}
+                            >
+                              {isSelected && (
+                                <div className="absolute top-2 right-2 bg-primary text-white rounded-full w-6 h-6 flex items-center justify-center">
+                                  ✓
+                                </div>
+                              )}
+                              <div className="flex justify-between items-center">
+                                <h4 className="font-medium text-gray-800">
+                                  {service.label}
+                                </h4>
+                                <span className="font-bold text-primary">
+                                  {currency === "NGN"
+                                    ? `₦${service.price.toLocaleString()}`
+                                    : `$${service.dollar.toLocaleString()}`}
+                                </span>
+                              </div>
+                            </div>
+                          )}
+                        />
+                      );
+                    })}
+                  </div>
+
+                  {/* Additional Services */}
+                  <FormDescription className="mt-6">
                     I would also like BTM to arrange the following for me.
                   </FormDescription>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mt-4">
-                    {services.map((service) => {
+                    {additionalServices.map((service) => {
                       const isSelected = selectedServices?.includes(service.id);
-
-                      const displayPrice =
-                        currency === "NGN"
-                          ? `₦${service.price.toLocaleString()}`
-                          : `$${service.dollar.toLocaleString()}`;
 
                       return (
                         <FormField
@@ -688,13 +1024,22 @@ export function BookingForm({ type }) {
                                   ✓
                                 </div>
                               )}
-
                               <div className="flex justify-between items-center">
-                                <h4 className="font-medium text-gray-800">
+                                <h4
+                                  className={`font-medium ${
+                                    isSelected
+                                      ? "text-gray-800"
+                                      : "text-gray-400"
+                                  }`}
+                                >
                                   {service.label}
                                 </h4>
                                 <span className="font-bold text-primary">
-                                  {displayPrice}
+                                  {service.price
+                                    ? currency === "NGN"
+                                      ? `₦${service.price.toLocaleString()}`
+                                      : `$${service.dollar.toLocaleString()}`
+                                    : "Contact BTM for pricing"}
                                 </span>
                               </div>
                             </div>
@@ -704,6 +1049,8 @@ export function BookingForm({ type }) {
                     })}
                   </div>
 
+                  {/* Selected Services Cart */}
+                  {/* Selected Services Cart */}
                   {selectedServices?.length > 0 && (
                     <div className="mt-6 p-4 border rounded-lg bg-gray-50">
                       <h4 className="font-semibold text-gray-700 mb-2">
@@ -711,32 +1058,98 @@ export function BookingForm({ type }) {
                       </h4>
                       <ul className="space-y-2">
                         {selectedServices.map((id: string) => {
-                          const svc = services.find((s) => s.id === id);
+                          const svc =
+                            primaryServices.find((s) => s.id === id) ||
+                            additionalServices.find((s) => s.id === id);
                           if (!svc) return null;
-                          const displayPrice =
-                            currency === "NGN"
-                              ? `₦${svc.price.toLocaleString()}`
-                              : `$${svc.dollar.toLocaleString()}`;
+
+                          const isPrimary = primaryServices.some(
+                            (s) => s.id === id
+                          );
+
                           return (
-                            <li key={id} className="flex justify-between">
+                            <li
+                              key={id}
+                              className={`flex justify-between ${
+                                !isPrimary ? "text-gray-400" : ""
+                              }`}
+                            >
                               <span>{svc.label}</span>
                               <span className="font-bold text-primary">
-                                {displayPrice}
+                                {isPrimary
+                                  ? currency === "NGN"
+                                    ? `₦${svc.price.toLocaleString()}`
+                                    : `$${svc.dollar.toLocaleString()}`
+                                  : svc.price
+                                  ? currency === "NGN"
+                                    ? `₦${svc.price.toLocaleString()}`
+                                    : `$${svc.dollar.toLocaleString()}`
+                                  : "Contact BTM for pricing"}
                               </span>
                             </li>
                           );
                         })}
                       </ul>
 
-                      <div className="flex justify-between items-center mt-4 border-t pt-4">
-                        <span className="font-semibold text-gray-700">
-                          Total
-                        </span>
-                        <span className="text-lg font-bold text-primary">
-                          {currency === "NGN"
-                            ? `₦${totalPrice.toLocaleString()}`
-                            : `$${totalDollarPrice.toLocaleString()}`}
-                        </span>
+                      {/* 🧮 Totals Section */}
+                      <div className="mt-4 border-t pt-4 space-y-1">
+                        <div className="flex justify-between text-gray-700">
+                          <span>Subtotal</span>
+                          <span className="font-semibold">
+                            {currency === "NGN"
+                              ? `₦${totalPrice.toLocaleString(undefined, {
+                                  minimumFractionDigits: 0,
+                                })}`
+                              : `$${totalDollarPrice.toLocaleString(undefined, {
+                                  minimumFractionDigits: 2,
+                                })}`}
+                          </span>
+                        </div>
+
+                        {/* 🟢 Show 10% Discount if Return Service Selected */}
+                        {form.watch("returnService") && (
+                          <div className="flex justify-between text-green-600">
+                            <span>10% Return Discount</span>
+                            <span>
+                              -
+                              {currency === "NGN"
+                                ? `₦${(totalPrice * 0.1).toLocaleString(
+                                    undefined,
+                                    { minimumFractionDigits: 0 }
+                                  )}`
+                                : `$${(totalDollarPrice * 0.1).toLocaleString(
+                                    undefined,
+                                    { minimumFractionDigits: 2 }
+                                  )}`}
+                            </span>
+                          </div>
+                        )}
+
+                        {/* Final Total */}
+                        <div className="flex justify-between items-center mt-2 border-t pt-2">
+                          <span className="font-semibold text-gray-700">
+                            Total
+                          </span>
+                          <span className="text-lg font-bold text-primary">
+                            {form.watch("returnService")
+                              ? currency === "NGN"
+                                ? `₦${(totalPrice * 0.9).toLocaleString(
+                                    undefined,
+                                    { minimumFractionDigits: 0 }
+                                  )}`
+                                : `$${(totalDollarPrice * 0.9).toLocaleString(
+                                    undefined,
+                                    { minimumFractionDigits: 2 }
+                                  )}`
+                              : currency === "NGN"
+                              ? `₦${totalPrice.toLocaleString(undefined, {
+                                  minimumFractionDigits: 0,
+                                })}`
+                              : `$${totalDollarPrice.toLocaleString(undefined, {
+                                  minimumFractionDigits: 2,
+                                })}`}
+                          </span>
+                        </div>
                       </div>
                     </div>
                   )}

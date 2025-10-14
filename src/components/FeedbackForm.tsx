@@ -41,7 +41,9 @@ export const formSchema = z
     meetingLocation: z.string().optional(),
     luggageNo: z.string().optional(),
     arrivalComment: z.string().optional(),
+    departureComment: z.string().optional(),
     arrivalRating: z.string().optional(),
+    departureRating: z.string().optional(),
 
     // Departure Section
     protocolOfficerMeet: z.string().optional(),
@@ -104,7 +106,9 @@ const BTMLogbookForm = () => {
       meetingLocation: "",
       luggageNo: "",
       arrivalComment: "",
+      departureComment: "",
       arrivalRating: "",
+      departureRating: "",
       protocolOfficerMeet: "",
       immigrationAssistance: "",
       meetInOrOutside: "",
@@ -229,13 +233,17 @@ const BTMLogbookForm = () => {
             </Card>
 
             {/* ✅ Arrival Section */}
+            {/* ✅ Condensed Arrival Feedback Section */}
             {selectedService === "arrival" && (
               <Card className="shadow-sm border-t-4 border-primary bg-card text-card-foreground">
                 <CardHeader>
-                  <CardTitle className="text-primary">Arrival</CardTitle>
+                  <CardTitle className="text-primary">
+                    Arrival Feedback
+                  </CardTitle>
                 </CardHeader>
+
                 <CardContent className="space-y-6">
-                  {/* Meeting Location */}
+                  {/* Met by Protocol Officer */}
                   <FormField
                     control={form.control}
                     name="meetingLocation"
@@ -248,22 +256,14 @@ const BTMLogbookForm = () => {
                           <RadioGroup
                             onValueChange={field.onChange}
                             value={field.value}
-                            className="flex gap-4 mt-2"
+                            className="flex gap-6 mt-2"
                           >
                             <div className="flex items-center space-x-2">
-                              <RadioGroupItem
-                                value="yes"
-                                id="met-yes"
-                                className="text-primary"
-                              />
+                              <RadioGroupItem value="yes" id="met-yes" />
                               <label htmlFor="met-yes">Yes</label>
                             </div>
                             <div className="flex items-center space-x-2">
-                              <RadioGroupItem
-                                value="no"
-                                id="met-no"
-                                className="text-primary"
-                              />
+                              <RadioGroupItem value="no" id="met-no" />
                               <label htmlFor="met-no">No</label>
                             </div>
                           </RadioGroup>
@@ -273,77 +273,97 @@ const BTMLogbookForm = () => {
                     )}
                   />
 
-                  {/* Luggage No */}
-                  <FormField
-                    control={form.control}
-                    name="luggageNo"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Luggage No.</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="Enter luggage number"
-                            {...field}
-                            className="border border-border rounded-md hover:border-primary focus:outline-none focus:ring-0 focus:border-primary"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  {/* Comment */}
-                  <FormField
-                    control={form.control}
-                    name="arrivalComment"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Comment</FormLabel>
-                        <FormControl>
-                          <Textarea
-                            placeholder="Enter your comments here..."
-                            rows={4}
-                            {...field}
-                            className="border border-border rounded-md hover:border-primary focus:outline-none focus:ring-0 focus:border-primary"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  {/* Rating */}
+                  {/* Rating 1–10 */}
                   <FormField
                     control={form.control}
                     name="arrivalRating"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Rating (1 = Worst, 5 = Excellent)</FormLabel>
+                        <FormLabel>Rate your experience (1–10)</FormLabel>
                         <FormControl>
                           <RadioGroup
                             onValueChange={field.onChange}
                             value={field.value}
-                            className="flex justify-between max-w-sm mt-2"
+                            className="flex flex-wrap gap-2 mt-2"
                           >
-                            {[1, 2, 3, 4, 5].map((num) => (
-                              <div
-                                key={num}
-                                className="flex flex-col items-center space-y-1"
-                              >
-                                <RadioGroupItem
-                                  value={num.toString()}
-                                  id={`rating-${num}`}
-                                  className="text-primary focus:ring-primary"
-                                />
+                            {[...Array(10)].map((_, i) => {
+                              const val = (i + 1).toString();
+                              const emojis = [
+                                "😡",
+                                "😡",
+                                "😕",
+                                "😕",
+                                "😐",
+                                "😐",
+                                "🙂",
+                                "🙂",
+                                "😍",
+                                "😍",
+                              ];
+                              const emoji = emojis[i];
+
+                              return (
                                 <label
-                                  htmlFor={`rating-${num}`}
-                                  className="text-xl"
+                                  key={val}
+                                  htmlFor={`rating-${val}`}
+                                  className={`flex flex-col items-center justify-center w-10 h-12 rounded-md border text-sm cursor-pointer select-none ${
+                                    field.value === val
+                                      ? "bg-primary text-white border-primary"
+                                      : "hover:bg-gray-100 border-gray-300"
+                                  }`}
                                 >
-                                  {["😡", "😞", "😐", "😊", "😍"][num - 1]}
+                                  <RadioGroupItem
+                                    value={val}
+                                    id={`rating-${val}`}
+                                    className="sr-only"
+                                  />
+                                  <span className="text-lg leading-none">
+                                    {emoji}
+                                  </span>
+                                  <span
+                                    className={`text-xs mt-1 ${
+                                      field.value === val
+                                        ? "text-white"
+                                        : "text-gray-600"
+                                    }`}
+                                  >
+                                    {val}
+                                  </span>
                                 </label>
-                              </div>
-                            ))}
+                              );
+                            })}
                           </RadioGroup>
+                        </FormControl>
+                        {field.value && (
+                          <p className="text-sm text-gray-600 mt-1">
+                            You rated your experience:{" "}
+                            <strong>{field.value}/10</strong>
+                          </p>
+                        )}
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Optional Comment */}
+                  <FormField
+                    control={form.control}
+                    name="arrivalComment"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>
+                          Additional Comments{" "}
+                          <span className="text-sm text-gray-500">
+                            (optional)
+                          </span>
+                        </FormLabel>
+                        <FormControl>
+                          <Textarea
+                            {...field}
+                            placeholder="Type your feedback (optional)..."
+                            rows={2}
+                            className="border border-border rounded-md focus:outline-none focus:ring-0 focus:border-primary"
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -357,8 +377,11 @@ const BTMLogbookForm = () => {
             {selectedService === "departure" && (
               <Card className="shadow-sm border-t-4 border-primary bg-card text-card-foreground">
                 <CardHeader>
-                  <CardTitle className="text-primary">Departure</CardTitle>
+                  <CardTitle className="text-primary">
+                    Departure Feedback
+                  </CardTitle>
                 </CardHeader>
+
                 <CardContent className="space-y-6">
                   {/* Protocol Officer Meet */}
                   <FormField
@@ -366,7 +389,9 @@ const BTMLogbookForm = () => {
                     name="protocolOfficerMeet"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Did protocol officer meet you?</FormLabel>
+                        <FormLabel>
+                          Did the Protocol Officer meet you?
+                        </FormLabel>
                         <FormControl>
                           <RadioGroup
                             onValueChange={field.onChange}
@@ -377,7 +402,6 @@ const BTMLogbookForm = () => {
                               <RadioGroupItem
                                 value="yes"
                                 id="departure-meet-yes"
-                                className="text-primary"
                               />
                               <label htmlFor="departure-meet-yes">Yes</label>
                             </div>
@@ -385,12 +409,12 @@ const BTMLogbookForm = () => {
                               <RadioGroupItem
                                 value="no"
                                 id="departure-meet-no"
-                                className="text-primary"
                               />
                               <label htmlFor="departure-meet-no">No</label>
                             </div>
                           </RadioGroup>
                         </FormControl>
+                        <FormMessage />
                       </FormItem>
                     )}
                   />
@@ -414,30 +438,28 @@ const BTMLogbookForm = () => {
                               <RadioGroupItem
                                 value="yes"
                                 id="immigration-yes"
-                                className="text-primary"
                               />
                               <label htmlFor="immigration-yes">Yes</label>
                             </div>
                             <div className="flex items-center space-x-2">
-                              <RadioGroupItem
-                                value="no"
-                                id="immigration-no"
-                                className="text-primary"
-                              />
+                              <RadioGroupItem value="no" id="immigration-no" />
                               <label htmlFor="immigration-no">No</label>
                             </div>
                           </RadioGroup>
                         </FormControl>
+                        <FormMessage />
                       </FormItem>
                     )}
                   />
+
+                  {/* Meeting Location */}
                   <FormField
                     control={form.control}
                     name="meetInOrOutside"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>
-                          Where Did Prorocol Officer Meet You?
+                          Where did the Protocol Officer meet you?
                         </FormLabel>
                         <FormControl>
                           <RadioGroup
@@ -446,66 +468,120 @@ const BTMLogbookForm = () => {
                             className="flex gap-4 mt-2"
                           >
                             <div className="flex items-center space-x-2">
-                              <RadioGroupItem
-                                value="yes"
-                                id="meetInOrOutside-yes"
-                                className="text-primary"
-                              />
-                              <label htmlFor="meetInOrOutside-yes">
-                                Inside
-                              </label>
+                              <RadioGroupItem value="inside" id="meet-inside" />
+                              <label htmlFor="meet-inside">Inside</label>
                             </div>
                             <div className="flex items-center space-x-2">
                               <RadioGroupItem
-                                value="no"
-                                id="meetInOrOutside-no"
-                                className="text-primary"
+                                value="outside"
+                                id="meet-outside"
                               />
-                              <label htmlFor="meetInOrOutside-no">
-                                Outside
-                              </label>
+                              <label htmlFor="meet-outside">Outside</label>
                             </div>
                           </RadioGroup>
                         </FormControl>
+                        <FormMessage />
                       </FormItem>
                     )}
                   />
 
-                  {/* Immigration Type */}
-                  {/* {form.watch("immigrationAssistance") === "yes" && (
-                    <FormField
-                      control={form.control}
-                      name="meetGreetLevel"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Immigration Assistance Type</FormLabel>
-                          <FormControl>
-                            <RadioGroup
-                              onValueChange={field.onChange}
-                              value={field.value}
-                              className="flex gap-6 mt-2"
-                            >
-                              {["standard", "vip", "vvip"].map((type) => (
-                                <div
-                                  key={type}
-                                  className="flex items-center space-x-2"
+                  {/* Feedback Rating */}
+                  <FormField
+                    control={form.control}
+                    name="departureRating"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>
+                          Rate your overall experience (1–10)
+                        </FormLabel>
+                        <FormControl>
+                          <RadioGroup
+                            onValueChange={field.onChange}
+                            value={field.value}
+                            className="flex flex-wrap gap-2 mt-2"
+                          >
+                            {[...Array(10)].map((_, i) => {
+                              const val = (i + 1).toString();
+                              const emojis = [
+                                "😡",
+                                "😡",
+                                "😕",
+                                "😕",
+                                "😐",
+                                "😐",
+                                "🙂",
+                                "🙂",
+                                "😍",
+                                "😍",
+                              ];
+                              const emoji = emojis[i];
+
+                              return (
+                                <label
+                                  key={val}
+                                  htmlFor={`departure-rating-${val}`}
+                                  className={`flex flex-col items-center justify-center w-10 h-12 rounded-md border text-sm cursor-pointer select-none ${
+                                    field.value === val
+                                      ? "bg-primary text-white border-primary"
+                                      : "hover:bg-gray-100 border-gray-300"
+                                  }`}
                                 >
                                   <RadioGroupItem
-                                    value={type}
-                                    id={type}
-                                    className="text-primary"
+                                    value={val}
+                                    id={`departure-rating-${val}`}
+                                    className="sr-only"
                                   />
-                                  <label htmlFor={type} className="capitalize">
-                                    {type}
-                                  </label>
-                                </div>
-                              ))}
-                            </RadioGroup>
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-                  )} */}
+                                  <span className="text-lg leading-none">
+                                    {emoji}
+                                  </span>
+                                  <span
+                                    className={`text-xs mt-1 ${
+                                      field.value === val
+                                        ? "text-white"
+                                        : "text-gray-600"
+                                    }`}
+                                  >
+                                    {val}
+                                  </span>
+                                </label>
+                              );
+                            })}
+                          </RadioGroup>
+                        </FormControl>
+                        {field.value && (
+                          <p className="text-sm text-gray-600 mt-1">
+                            You rated: <strong>{field.value}/10</strong>
+                          </p>
+                        )}
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Optional Comment */}
+                  <FormField
+                    control={form.control}
+                    name="departureComment"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>
+                          Additional Comments{" "}
+                          <span className="text-sm text-gray-500">
+                            (optional)
+                          </span>
+                        </FormLabel>
+                        <FormControl>
+                          <Textarea
+                            {...field}
+                            placeholder="Type any feedback here..."
+                            rows={2}
+                            className="border border-border rounded-md focus:outline-none focus:ring-0 focus:border-primary"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </CardContent>
               </Card>
             )}

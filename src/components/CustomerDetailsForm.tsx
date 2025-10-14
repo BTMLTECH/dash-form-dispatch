@@ -19,25 +19,23 @@ import { toast } from "@/hooks/use-toast";
 import { api } from "@/lib/api";
 
 // const formSchema = z.object({
-//   passengerName: z.string().min(1, "Passenger name is required"),
-//   contact: z.string().min(1, "Contact is required"),
-//   email: z.string().email("Invalid email"),
-//   protocolOfficer: z.string().min(1, "Assigned protocol officer is required"),
 
-//   badgeVerification: z.enum(["yes", "no"]).refine((val) => val !== undefined, {
-//     message: "Please select badge verification",
-//   }),
-
-//   checkInIssues: z.enum(["yes", "no"]).refine((val) => val !== undefined, {
-//     message: "Please select if there were any issues",
-//   })
-// });
 const formSchema = z
   .object({
     passengerName: z.string().min(1, "Passenger name is required"),
-    contact: z.string().min(1, "Contact is required"),
-    email: z.string().email("Invalid email"),
-    protocolOfficer: z.string().min(1, "Assigned protocol officer is required"),
+    contact: z.string().min(1, "Contact number is required"),
+    email: z.string().email("Invalid email address"),
+
+    // Updated Protocol Officer Fields
+    btmProtocolOfficerName: z
+      .string()
+      .min(1, "BTM Protocol Officer Name is required"),
+    partnerProtocolOfficerName: z
+      .string()
+      .min(1, "Airport Partner Protocol Officer Name is required"),
+    partnerProtocolOfficerMobile: z
+      .string()
+      .min(1, "Partner Protocol Officer Mobile Number is required"),
 
     badgeVerification: z
       .enum(["yes", "no"])
@@ -64,22 +62,67 @@ const formSchema = z
     }
   );
 
+// const formSchema = z
+//   .object({
+//     passengerName: z.string().min(1, "Passenger name is required"),
+//     contact: z.string().min(1, "Contact is required"),
+//     email: z.string().email("Invalid email"),
+//     protocolOfficer: z.string().min(1, "Assigned protocol officer is required"),
+
+// badgeVerification: z
+//   .enum(["yes", "no"])
+//   .refine((val) => val !== undefined, {
+//     message: "Please select badge verification",
+//   }),
+
+// checkInIssues: z.enum(["yes", "no"]).refine((val) => val !== undefined, {
+//   message: "Please select if there were any issues",
+// }),
+
+//     checkInComment: z.string().optional(),
+//   })
+//   .refine(
+//     (data) => {
+//       if (data.checkInIssues === "yes") {
+//         return data.checkInComment && data.checkInComment.trim().length > 0;
+//       }
+//       return true;
+//     },
+//     {
+//       path: ["checkInComment"],
+//       message: "Please provide details about the check-in issues",
+//     }
+//   );
+
 export default function CheckInReportForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // const form = useForm<z.infer<typeof formSchema>>({
+  //   resolver: zodResolver(formSchema),
+  //   defaultValues: {
+  //     passengerName: "",
+  //     contact: "",
+  //     email: "",
+  //     protocolOfficer: "",
+  //     badgeVerification: undefined,
+  //     checkInIssues: undefined,
+  //     checkInComment: "",
+  //   } as any,
+  // });
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       passengerName: "",
       contact: "",
       email: "",
-      protocolOfficer: "",
+      btmProtocolOfficerName: "",
+      partnerProtocolOfficerName: "",
+      partnerProtocolOfficerMobile: "",
       badgeVerification: undefined,
       checkInIssues: undefined,
       checkInComment: "",
-    } as any,
+    },
   });
-
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
       setIsSubmitting(true);
@@ -145,6 +188,7 @@ export default function CheckInReportForm() {
                   Passenger Information
                 </CardTitle>
               </CardHeader>
+
               <CardContent className="space-y-6">
                 {/* Passenger Name */}
                 <FormField
@@ -161,7 +205,7 @@ export default function CheckInReportForm() {
                   )}
                 />
 
-                {/* Contact */}
+                {/* Contact Number */}
                 <FormField
                   control={form.control}
                   name="contact"
@@ -197,22 +241,70 @@ export default function CheckInReportForm() {
                   )}
                 />
 
-                {/* Protocol Officer */}
-                <FormField
-                  control={form.control}
-                  name="protocolOfficer"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>
-                        Assigned Protocol Officer (BTM & Partner Hc)
-                      </FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter officer name" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                {/* Protocol Section */}
+                <div className="border-t pt-6 mt-6">
+                  <h3 className="text-lg font-semibold text-gray-700 mb-4">
+                    Protocol Officer Details
+                  </h3>
+
+                  {/* BTM Protocol Officer Name */}
+                  <FormField
+                    control={form.control}
+                    name="btmProtocolOfficerName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>BTM Protocol Officer Name</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="Enter BTM officer name"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Airport Partner Protocol Officer Name */}
+                  <FormField
+                    control={form.control}
+                    name="partnerProtocolOfficerName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>
+                          Airport Partner Protocol Officer Name
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="Enter partner officer name"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Partner Protocol Officer Mobile */}
+                  <FormField
+                    control={form.control}
+                    name="partnerProtocolOfficerMobile"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>
+                          Partner Protocol Officer Mobile Number
+                          <span className="text-gray-500 text-sm ml-1">
+                            (Needed in case of flight delay or passenger issue)
+                          </span>
+                        </FormLabel>
+                        <FormControl>
+                          <Input placeholder="+1 987 654 3210" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
                 {/* Badge Verification */}
                 <FormField
@@ -270,7 +362,7 @@ export default function CheckInReportForm() {
                   )}
                 />
 
-                {/* Show comment field only if "Yes" is selected */}
+                {/* Conditional Comment Field */}
                 {form.watch("checkInIssues") === "yes" && (
                   <FormField
                     control={form.control}
@@ -294,7 +386,7 @@ export default function CheckInReportForm() {
               </CardContent>
             </Card>
 
-            {/* Submit */}
+            {/* Submit Button */}
             <div className="flex justify-end">
               <Button
                 type="submit"
