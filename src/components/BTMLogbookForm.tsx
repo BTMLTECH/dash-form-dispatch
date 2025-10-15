@@ -1198,9 +1198,10 @@ export function BookingForm({ type }) {
                                 {/* Dynamically convert Naira to USD for options */}
                                 {svc.options ? (
                                   <span className="text-xs text-gray-500">
-                                    {currency === "NGN"
+                                    {svc.options.find((o) => o.type === opt)
+                                      ?.priceRange && currency === "NGN"
                                       ? svc.options.find((o) => o.type === opt)
-                                          ?.priceRange || "See BTM"
+                                          ?.priceRange
                                       : (() => {
                                           const selectedOption =
                                             svc.options.find(
@@ -1211,19 +1212,26 @@ export function BookingForm({ type }) {
                                           const rangeParts =
                                             selectedOption.priceRange
                                               .replace(/₦|,/g, "")
-                                              .split(" - ");
+                                              .split(" - ")
+                                              .map((p) =>
+                                                currency === "NGN"
+                                                  ? `₦${parseInt(
+                                                      p
+                                                    ).toLocaleString()}`
+                                                  : `$${parseInt(
+                                                      p
+                                                    ).toLocaleString()}`
+                                              );
 
-                                          const converted = rangeParts
-                                            .map((p) => convert(parseFloat(p)))
-                                            .join(" - ");
-
-                                          return converted;
+                                          return rangeParts.join(" - ");
                                         })()}
                                   </span>
                                 ) : (
                                   <span className="text-xs text-gray-500">
                                     {svc.price
-                                      ? convert(svc.price)
+                                      ? currency === "NGN"
+                                        ? `₦${svc.price.toLocaleString()}`
+                                        : `$${svc.price.toLocaleString()}`
                                       : "Contact BTM"}
                                   </span>
                                 )}
