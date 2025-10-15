@@ -174,7 +174,11 @@ export function BookingForm({ type }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [totalPrice, setTotalPrice] = useState(0);
   const [totalDollarPrice, setTotalDollarPrice] = useState(0);
-  const { currency, toggleCurrency } = useCurrency();
+  const { currency, toggleCurrency, format, convert } = useCurrency();
+
+  const [selectedOptions, setSelectedOptions] = useState<{
+    [key: string]: string;
+  }>({});
   // const form = useForm<FormData>({
   //   resolver: zodResolver(formSchema),
   //   defaultValues: {
@@ -766,168 +770,171 @@ export function BookingForm({ type }) {
             </div>
             {(type === "domestic" || type === "international") && (
               <>
-                <div className="space-y-6">
-                  <h3 className="text-xl font-semibold text-foreground">
-                    Additional Information
-                  </h3>
+                {/* 🧾 Additional Info Section */}
 
-                  <FormField
-                    control={form.control}
-                    name="specialRequests"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Special Requests or Notes</FormLabel>
-                        <FormControl>
-                          <Textarea
-                            placeholder="Any special requirements or additional information..."
-                            className="min-h-[100px]"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                {type === "domestic" && (
+                  <div className="space-y-6">
+                    <h3 className="text-xl font-semibold text-foreground">
+                      Additional Information
+                    </h3>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <FormField
                       control={form.control}
-                      name="discountCode"
+                      name="specialRequests"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="flex items-center gap-2">
-                            <Tag className="h-4 w-4" />
-                            Discount Code
-                          </FormLabel>
+                          <FormLabel>Special Requests or Notes</FormLabel>
                           <FormControl>
-                            <Input placeholder="If available" {...field} />
+                            <Textarea
+                              placeholder="Any special requirements or additional information..."
+                              className="min-h-[100px]"
+                              {...field}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
 
-                    <FormField
-                      control={form.control}
-                      name="referralSource"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>How did you hear about us?</FormLabel>
-                          <Select
-                            onValueChange={field.onChange}
-                            defaultValue={field.value}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select an option" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent
-                              style={{ backgroundColor: "hsl(0 0% 100%)" }}
-                              className="text-black border border-border shadow-lg rounded-md max-h-60 overflow-y-auto"
-                            >
-                              {referralSources.map((source) => (
-                                <SelectItem
-                                  key={source}
-                                  value={source
-                                    .toLowerCase()
-                                    .replace(/\s+/g, "-")}
-                                >
-                                  {source}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                </div>
-
-                {/* ✅ Return Airport Service Section */}
-                <div className="mt-6 border rounded-lg p-6 bg-gray-50">
-                  <h3 className="text-lg font-semibold text-primary">
-                    Return Airport Service
-                  </h3>
-
-                  <FormField
-                    control={form.control}
-                    name="returnService"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormControl>
-                          <div className="flex items-center gap-3 mt-2">
-                            <Checkbox
-                              checked={field.value || false}
-                              onCheckedChange={field.onChange}
-                              id="return-service"
-                            />
-                            <label
-                              htmlFor="return-service"
-                              className="text-gray-700"
-                            >
-                              I would like to book my return airport service
-                              (10% discount)
-                            </label>
-                          </div>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  {form.watch("returnService") && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <FormField
                         control={form.control}
-                        name="returnDate"
+                        name="discountCode"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Return Date</FormLabel>
+                            <FormLabel className="flex items-center gap-2">
+                              <Tag className="h-4 w-4" />
+                              Discount Code
+                            </FormLabel>
                             <FormControl>
-                              <Input type="date" {...field} />
+                              <Input placeholder="If available" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
+
                       <FormField
                         control={form.control}
-                        name="returnFlight"
+                        name="referralSource"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Return Flight Number</FormLabel>
-                            <FormControl>
-                              <Input placeholder="e.g. BA123" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="returnNotes"
-                        render={({ field }) => (
-                          <FormItem className="md:col-span-2">
-                            <FormLabel>Additional Notes (optional)</FormLabel>
-                            <FormControl>
-                              <Textarea
-                                {...field}
-                                placeholder="Add any special requests or return details..."
-                                className="min-h-[80px]"
-                              />
-                            </FormControl>
+                            <FormLabel>How did you hear about us?</FormLabel>
+                            <Select
+                              onValueChange={field.onChange}
+                              defaultValue={field.value}
+                            >
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select an option" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent className="text-black border border-border shadow-lg rounded-md max-h-60 overflow-y-auto">
+                                {referralSources.map((source) => (
+                                  <SelectItem
+                                    key={source}
+                                    value={source
+                                      .toLowerCase()
+                                      .replace(/\s+/g, "-")}
+                                  >
+                                    {source}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
                     </div>
-                  )}
-                </div>
+                  </div>
+                )}
 
+                {/* ✈️ Return Service (ONLY for International Type) */}
+                {type === "international" && (
+                  <div className="mt-6 border rounded-lg p-6 bg-gray-50">
+                    <h3 className="text-lg font-semibold text-primary">
+                      Return Airport Service
+                    </h3>
+
+                    <FormField
+                      control={form.control}
+                      name="returnService"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormControl>
+                            <div className="flex items-center gap-3 mt-2">
+                              <Checkbox
+                                checked={field.value || false}
+                                onCheckedChange={field.onChange}
+                                id="return-service"
+                              />
+                              <label
+                                htmlFor="return-service"
+                                className="text-gray-700"
+                              >
+                                I would like to book my return airport service
+                                (10% discount)
+                              </label>
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    {form.watch("returnService") && (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                        <FormField
+                          control={form.control}
+                          name="returnDate"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Return Date</FormLabel>
+                              <FormControl>
+                                <Input type="date" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="returnFlight"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Return Flight Number</FormLabel>
+                              <FormControl>
+                                <Input placeholder="e.g. BA123" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="returnNotes"
+                          render={({ field }) => (
+                            <FormItem className="md:col-span-2">
+                              <FormLabel>Additional Notes (optional)</FormLabel>
+                              <FormControl>
+                                <Textarea
+                                  {...field}
+                                  placeholder="Add any special requests or return details..."
+                                  className="min-h-[80px]"
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* 💼 Type of Service */}
                 <div className="space-y-6">
-                  {/* Type of Service Section */}
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
                     <h3 className="text-xl font-semibold text-foreground flex items-center gap-2">
                       <Plane className="h-5 w-5 text-primary" />
@@ -935,8 +942,7 @@ export function BookingForm({ type }) {
                     </h3>
                     <CurrencyToggle />
                   </div>
-
-                  {/* Primary Services */}
+                  {/* ✅ Primary Services */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mt-4">
                     {primaryServices.map((service) => {
                       const isSelected = selectedServices?.includes(service.id);
@@ -982,15 +988,14 @@ export function BookingForm({ type }) {
                       );
                     })}
                   </div>
-
-                  {/* Additional Services */}
+                  {/* ✅ Additional Services */}
                   <FormDescription className="mt-6">
                     I would also like BTM to arrange the following for me.
                   </FormDescription>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mt-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mt-6">
                     {additionalServices.map((service) => {
                       const isSelected = selectedServices?.includes(service.id);
+                      const selectedOpt = selectedOptions?.[service.id];
 
                       return (
                         <FormField
@@ -999,18 +1004,38 @@ export function BookingForm({ type }) {
                           name="services"
                           render={({ field }) => (
                             <div
-                              className={`relative border rounded-xl p-4 cursor-pointer transition-all ${
+                              className={`relative border rounded-xl p-4 cursor-pointer transition-all overflow-hidden ${
                                 isSelected
                                   ? "border-primary bg-gray-50 shadow-md"
                                   : "border-gray-300 hover:border-primary/50 hover:shadow-sm"
                               }`}
-                              onClick={() => {
+                              style={{
+                                transition:
+                                  "max-height 0.3s ease, background-color 0.3s ease",
+                                maxHeight:
+                                  isSelected && service.options
+                                    ? "500px"
+                                    : "100px",
+                              }}
+                              onClick={(e) => {
+                                if (
+                                  (e.target as HTMLElement).closest(
+                                    ".option-item"
+                                  )
+                                )
+                                  return;
+
                                 if (isSelected) {
                                   field.onChange(
                                     field.value?.filter(
                                       (id: string) => id !== service.id
                                     )
                                   );
+                                  setSelectedOptions((prev) => {
+                                    const copy = { ...prev };
+                                    delete copy[service.id];
+                                    return copy;
+                                  });
                                 } else {
                                   field.onChange([
                                     ...(field.value || []),
@@ -1024,6 +1049,8 @@ export function BookingForm({ type }) {
                                   ✓
                                 </div>
                               )}
+
+                              {/* Header */}
                               <div className="flex justify-between items-center">
                                 <h4
                                   className={`font-medium ${
@@ -1034,117 +1061,245 @@ export function BookingForm({ type }) {
                                 >
                                   {service.label}
                                 </h4>
-                                <span className="font-bold text-primary">
-                                  {service.price
-                                    ? currency === "NGN"
-                                      ? `₦${service.price.toLocaleString()}`
-                                      : `$${service.dollar.toLocaleString()}`
-                                    : "Contact BTM for pricing"}
-                                </span>
+
+                                {/* 💰 Price handling */}
+                                {!service.options && (
+                                  <span className="font-bold text-primary text-sm">
+                                    {service.price
+                                      ? // ✅ Lounge has both, so use correct one
+                                        service.dollar
+                                        ? currency === "NGN"
+                                          ? format(service.price, "NGN")
+                                          : format(service.dollar, "USD")
+                                        : // ✅ Convert dynamically if USD missing
+                                        currency === "NGN"
+                                        ? format(service.price, "NGN")
+                                        : format(
+                                            convert(
+                                              service.price,
+                                              "NGN",
+                                              "USD"
+                                            ),
+                                            "USD"
+                                          )
+                                      : "Contact BTM"}
+                                  </span>
+                                )}
                               </div>
+
+                              {/* 🚗 Nested Options (SUV, Bus, etc.) */}
+                              {isSelected && service.options && (
+                                <div className="mt-3 space-y-2">
+                                  {service.options.map((opt) => {
+                                    const isOptSelected =
+                                      selectedOpt === opt.type;
+
+                                    // ✨ Handle both pre-defined USD ranges & converted NGN ranges
+                                    const displayRange =
+                                      currency === "NGN"
+                                        ? opt.priceRange
+                                        : // if there's no predefined USD range, calculate
+                                          (() => {
+                                            const matches =
+                                              opt.priceRange.match(
+                                                /₦?([\d,]+)(?:\s*-\s*₦?([\d,]+))?/
+                                              );
+                                            if (!matches) return "See BTM";
+                                            const [_, min, max] = matches;
+                                            const minNum = parseFloat(
+                                              min.replace(/,/g, "")
+                                            );
+                                            const maxNum = max
+                                              ? parseFloat(
+                                                  max.replace(/,/g, "")
+                                                )
+                                              : minNum;
+
+                                            const minUSD = convert(
+                                              minNum,
+                                              "NGN",
+                                              "USD"
+                                            );
+                                            const maxUSD = convert(
+                                              maxNum,
+                                              "NGN",
+                                              "USD"
+                                            );
+
+                                            return `$${minUSD.toFixed(0)}${
+                                              max
+                                                ? ` - $${maxUSD.toFixed(0)}`
+                                                : ""
+                                            }`;
+                                          })();
+
+                                    return (
+                                      <div
+                                        key={opt.type}
+                                        className={`option-item flex justify-between items-center p-2 rounded-lg border cursor-pointer transition-all ${
+                                          isOptSelected
+                                            ? "border-primary bg-primary/10 text-primary font-semibold"
+                                            : "border-gray-300 hover:bg-gray-50"
+                                        }`}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setSelectedOptions((prev) => ({
+                                            ...prev,
+                                            [service.id]:
+                                              prev[service.id] === opt.type
+                                                ? ""
+                                                : opt.type,
+                                          }));
+                                        }}
+                                      >
+                                        <span>{opt.type}</span>
+                                        <span className="text-sm">
+                                          {displayRange}
+                                        </span>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              )}
                             </div>
                           )}
                         />
                       );
                     })}
                   </div>
-
-                  {/* Selected Services Cart */}
-                  {/* Selected Services Cart */}
-                  {selectedServices?.length > 0 && (
-                    <div className="mt-6 p-4 border rounded-lg bg-gray-50">
-                      <h4 className="font-semibold text-gray-700 mb-2">
-                        Selected Services
+                  {/* 🧾 Offline Payment Summary (Additional Services) */}
+                  {selectedServices?.some((id: string) =>
+                    additionalServices.some((s) => s.id === id)
+                  ) && (
+                    <div className="mt-8 p-4 border rounded-lg bg-gray-50">
+                      <h4 className="font-semibold text-gray-700 mb-3">
+                        Offline Payment Summary
                       </h4>
+
                       <ul className="space-y-2">
                         {selectedServices.map((id: string) => {
-                          const svc =
-                            primaryServices.find((s) => s.id === id) ||
-                            additionalServices.find((s) => s.id === id);
-                          if (!svc) return null;
-
-                          const isPrimary = primaryServices.some(
+                          const svc = additionalServices.find(
                             (s) => s.id === id
                           );
+                          if (!svc) return null;
+                          const opt = selectedOptions?.[id];
 
                           return (
                             <li
                               key={id}
-                              className={`flex justify-between ${
-                                !isPrimary ? "text-gray-400" : ""
-                              }`}
+                              className="flex justify-between text-gray-700"
                             >
-                              <span>{svc.label}</span>
-                              <span className="font-bold text-primary">
-                                {isPrimary
-                                  ? currency === "NGN"
-                                    ? `₦${svc.price.toLocaleString()}`
-                                    : `$${svc.dollar.toLocaleString()}`
-                                  : svc.price
-                                  ? currency === "NGN"
-                                    ? `₦${svc.price.toLocaleString()}`
-                                    : `$${svc.dollar.toLocaleString()}`
-                                  : "Contact BTM for pricing"}
-                              </span>
+                              <div className="flex flex-col">
+                                <span>
+                                  {svc.label}
+                                  {opt ? ` - ${opt}` : ""}
+                                </span>
+
+                                {/* Dynamically convert Naira to USD for options */}
+                                {svc.options ? (
+                                  <span className="text-xs text-gray-500">
+                                    {currency === "NGN"
+                                      ? svc.options.find((o) => o.type === opt)
+                                          ?.priceRange || "See BTM"
+                                      : (() => {
+                                          const selectedOption =
+                                            svc.options.find(
+                                              (o) => o.type === opt
+                                            );
+                                          if (!selectedOption) return "See BTM";
+
+                                          const rangeParts =
+                                            selectedOption.priceRange
+                                              .replace(/₦|,/g, "")
+                                              .split(" - ");
+
+                                          const converted = rangeParts
+                                            .map((p) => convert(parseFloat(p)))
+                                            .join(" - ");
+
+                                          return converted;
+                                        })()}
+                                  </span>
+                                ) : (
+                                  <span className="text-xs text-gray-500">
+                                    {svc.price
+                                      ? convert(svc.price)
+                                      : "Contact BTM"}
+                                  </span>
+                                )}
+                              </div>
                             </li>
                           );
                         })}
                       </ul>
 
-                      {/* 🧮 Totals Section */}
-                      <div className="mt-4 border-t pt-4 space-y-1">
+                      <div className="mt-4 text-sm text-gray-600 border-t pt-3 leading-relaxed">
+                        <p>
+                          <strong>Note:</strong> These services are payable{" "}
+                          <b>offline</b>. Our BTM representative will contact
+                          you to confirm and arrange payment.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 🧮 Cart Summary (Primary Only) */}
+                  {selectedServices?.some((id: string) =>
+                    primaryServices.some((s) => s.id === id)
+                  ) && (
+                    <div className="mt-8 p-4 border rounded-lg bg-gray-50">
+                      <h4 className="font-semibold text-gray-700 mb-3">
+                        Cart Summary
+                      </h4>
+
+                      <div className="space-y-2">
                         <div className="flex justify-between text-gray-700">
                           <span>Subtotal</span>
                           <span className="font-semibold">
                             {currency === "NGN"
-                              ? `₦${totalPrice.toLocaleString(undefined, {
-                                  minimumFractionDigits: 0,
-                                })}`
+                              ? `₦${totalPrice.toLocaleString()}`
                               : `$${totalDollarPrice.toLocaleString(undefined, {
                                   minimumFractionDigits: 2,
                                 })}`}
                           </span>
                         </div>
 
-                        {/* 🟢 Show 10% Discount if Return Service Selected */}
-                        {form.watch("returnService") && (
-                          <div className="flex justify-between text-green-600">
-                            <span>10% Return Discount</span>
-                            <span>
-                              -
-                              {currency === "NGN"
-                                ? `₦${(totalPrice * 0.1).toLocaleString(
-                                    undefined,
-                                    { minimumFractionDigits: 0 }
-                                  )}`
-                                : `$${(totalDollarPrice * 0.1).toLocaleString(
-                                    undefined,
-                                    { minimumFractionDigits: 2 }
-                                  )}`}
-                            </span>
-                          </div>
-                        )}
+                        {/* 🟢 Discount (Only for International Type) */}
+                        {type === "international" &&
+                          form.watch("returnService") && (
+                            <div className="flex justify-between text-green-600">
+                              <span>10% Return Discount</span>
+                              <span>
+                                -
+                                {currency === "NGN"
+                                  ? `₦${(totalPrice * 0.1).toLocaleString()}`
+                                  : `$${(totalDollarPrice * 0.1).toLocaleString(
+                                      undefined,
+                                      {
+                                        minimumFractionDigits: 2,
+                                      }
+                                    )}`}
+                              </span>
+                            </div>
+                          )}
 
-                        {/* Final Total */}
                         <div className="flex justify-between items-center mt-2 border-t pt-2">
                           <span className="font-semibold text-gray-700">
                             Total
                           </span>
                           <span className="text-lg font-bold text-primary">
-                            {form.watch("returnService")
+                            {type === "international" &&
+                            form.watch("returnService")
                               ? currency === "NGN"
-                                ? `₦${(totalPrice * 0.9).toLocaleString(
+                                ? `₦${totalPrice.toLocaleString()}`
+                                : `$${totalDollarPrice.toLocaleString(
                                     undefined,
-                                    { minimumFractionDigits: 0 }
-                                  )}`
-                                : `$${(totalDollarPrice * 0.9).toLocaleString(
-                                    undefined,
-                                    { minimumFractionDigits: 2 }
+                                    {
+                                      minimumFractionDigits: 2,
+                                    }
                                   )}`
                               : currency === "NGN"
-                              ? `₦${totalPrice.toLocaleString(undefined, {
-                                  minimumFractionDigits: 0,
-                                })}`
+                              ? `₦${totalPrice.toLocaleString()}`
                               : `$${totalDollarPrice.toLocaleString(undefined, {
                                   minimumFractionDigits: 2,
                                 })}`}
