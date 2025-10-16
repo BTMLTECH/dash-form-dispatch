@@ -1195,43 +1195,45 @@ export function BookingForm({ type }) {
                                   {opt ? ` - ${opt}` : ""}
                                 </span>
 
-                                {/* Dynamically convert Naira to USD for options */}
+                                {/* ✅ Correctly convert Naira to USD */}
                                 {svc.options ? (
                                   <span className="text-xs text-gray-500">
-                                    {svc.options.find((o) => o.type === opt)
-                                      ?.priceRange && currency === "NGN"
-                                      ? svc.options.find((o) => o.type === opt)
-                                          ?.priceRange
-                                      : (() => {
-                                          const selectedOption =
-                                            svc.options.find(
-                                              (o) => o.type === opt
-                                            );
-                                          if (!selectedOption) return "See BTM";
+                                    {(() => {
+                                      const selectedOption = svc.options.find(
+                                        (o) => o.type === opt
+                                      );
+                                      if (!selectedOption) return "See BTM";
 
-                                          const rangeParts =
-                                            selectedOption.priceRange
-                                              .replace(/₦|,/g, "")
-                                              .split(" - ")
-                                              .map((p) =>
-                                                currency === "NGN"
-                                                  ? `₦${parseInt(
-                                                      p
-                                                    ).toLocaleString()}`
-                                                  : `$${parseInt(
-                                                      p
-                                                    ).toLocaleString()}`
-                                              );
+                                      const rangeText =
+                                        selectedOption.priceRange;
+                                      const numbers = rangeText
+                                        .replace(/₦|,/g, "")
+                                        .split(" - ")
+                                        .map((p) => parseFloat(p.trim()));
 
-                                          return rangeParts.join(" - ");
-                                        })()}
+                                      const converted = numbers.map((val) =>
+                                        currency === "NGN"
+                                          ? `₦${val.toLocaleString()}`
+                                          : `$${convert(
+                                              val,
+                                              "NGN",
+                                              "USD"
+                                            ).toFixed(2)}`
+                                      );
+
+                                      return converted.join(" - ");
+                                    })()}
                                   </span>
                                 ) : (
                                   <span className="text-xs text-gray-500">
                                     {svc.price
                                       ? currency === "NGN"
                                         ? `₦${svc.price.toLocaleString()}`
-                                        : `$${svc.price.toLocaleString()}`
+                                        : `$${convert(
+                                            svc.price,
+                                            "NGN",
+                                            "USD"
+                                          ).toFixed(2)}`
                                       : "Contact BTM"}
                                   </span>
                                 )}
