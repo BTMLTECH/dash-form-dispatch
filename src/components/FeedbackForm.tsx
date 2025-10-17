@@ -27,6 +27,7 @@ import {
 } from "./ui/dialog";
 import { api } from "@/lib/api";
 import { useNavigate } from "react-router-dom";
+import ReusableHeader from "./ReusableHeader";
 
 export const formSchema = z
   .object({
@@ -156,26 +157,10 @@ const BTMLogbookForm = () => {
   return (
     <div className="min-h-screen bg-background py-10 px-4">
       <div className="max-w-4xl mx-auto">
-        <header className="relative flex flex-col items-center text-center mb-10 rounded-xl border border-gray-400 bg-gradient-to-b from-white to-gray-100 shadow-sm p-6">
-          <div className="flex items-center justify-center gap-4 mb-3">
-            <img
-              src="/assets/btm.png"
-              alt="BTM Logo"
-              className="h-14 w-auto drop-shadow-sm"
-            />
-            <div className="text-left">
-              <h1 className="text-3xl font-extrabold tracking-tight text-primary">
-                BTM Airport Services Feedback
-              </h1>
-              <p className="text-sm text-gray-500 mt-1">
-                Your feedback helps us improve your experience
-              </p>
-            </div>
-          </div>
-
-          {/* Decorative underline */}
-          <div className="w-32 h-[2px] bg-gradient-to-r from-transparent via-gray-500 to-transparent rounded-full"></div>
-        </header>
+        <ReusableHeader
+          title="BTM Airport Services Feedback"
+          description=" Your feedback helps us improve your experience"
+        />
 
         {/* ✅ Form */}
         <Form {...form}>

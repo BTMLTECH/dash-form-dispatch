@@ -17,6 +17,7 @@ import { useState } from "react";
 import axios from "axios";
 import { toast } from "@/hooks/use-toast";
 import { api } from "@/lib/api";
+import ReusableHeader from "./ReusableHeader";
 
 // const formSchema = z.object({
 
@@ -160,24 +161,10 @@ export default function CheckInReportForm() {
     <div className="min-h-screen bg-gray-50 py-10 px-4">
       <div className="max-w-3xl mx-auto">
         {/* ✅ Elegant Header */}
-        <header className="relative flex flex-col items-center text-center mb-10 rounded-xl border border-gray-400 bg-gradient-to-b from-white to-gray-100 shadow-sm p-6">
-          <div className="flex items-center justify-center gap-4 mb-3">
-            <img
-              src="/assets/btm.png"
-              alt="BTM Logo"
-              className="h-14 w-auto drop-shadow-sm"
-            />
-            <div className="text-left">
-              <h1 className="text-3xl font-extrabold tracking-tight text-primary">
-                Customer Details Form
-              </h1>
-              <p className="text-sm text-gray-500 mt-1">
-                Please fill out this form for each passenger
-              </p>
-            </div>
-          </div>
-          <div className="w-32 h-[2px] bg-gradient-to-r from-transparent via-gray-500 to-transparent rounded-full"></div>
-        </header>
+        <ReusableHeader
+          title="Customer Details Form"
+          description="Please fill out this form for each passenger"
+        />
 
         {/* ✅ Form */}
         <Form {...form}>

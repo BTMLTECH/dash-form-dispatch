@@ -39,6 +39,7 @@ import {
   domesticCities,
   internationalCities,
 } from "@/lib/data";
+import ReusableHeader from "./ReusableHeader";
 
 // export const formSchema = z.object({
 //   fullName: z
@@ -497,7 +498,7 @@ export function BookingForm({ type }) {
   return (
     <div className="min-h-screen bg-gray-50 py-10 px-4">
       <div className="max-w-3xl mx-auto">
-        <header className="relative flex flex-col items-center text-center mb-10 rounded-xl border border-gray-400 bg-gradient-to-b from-white to-gray-100 shadow-sm p-6">
+        {/* <header className="relative flex flex-col items-center text-center mb-10 rounded-xl border border-gray-400 bg-gradient-to-b from-white to-gray-100 shadow-sm p-6">
           <div className="flex items-center justify-center gap-4 mb-3">
             <img
               src="/assets/btm.png"
@@ -505,7 +506,7 @@ export function BookingForm({ type }) {
               className="h-14 w-auto drop-shadow-sm"
             />
             <div className="text-left">
-              <h1 className="text-3xl font-extrabold tracking-tight text-primary">
+              <h1 className="text-3xl font-extrabold tracking-tight text-pretty">
                 Airport Protocol Services
               </h1>
               <p className="text-sm text-gray-500 mt-1">
@@ -520,7 +521,11 @@ export function BookingForm({ type }) {
             </div>
           </div>
           <div className="w-32 h-[2px] bg-gradient-to-r from-transparent via-gray-500 to-transparent rounded-full"></div>
-        </header>
+        </header> */}
+        <ReusableHeader
+          title="Airport Protocol Services"
+          description="At BTM, we redefine the airport experience with distinction, comfort, and sophistication. From seamless airport transfers and executive car hire to personalised escorting, lounge access, and meet & greet services — every detail is tailored to complement your journey. Simply complete the form below with your travel details, and our team will curate a bespoke experience that ensures efficiency, ease, and exclusivity from start to finish."
+        />
         {type === "domestic" && (
           <div
             className="mb-8 p-4 border border-gray-300 rounded-lg text-center"
@@ -829,7 +834,10 @@ export function BookingForm({ type }) {
                                   <SelectValue placeholder="Select an option" />
                                 </SelectTrigger>
                               </FormControl>
-                              <SelectContent className="text-black border border-border shadow-lg rounded-md max-h-60 overflow-y-auto">
+                              <SelectContent
+                                style={{ backgroundColor: "hsl(0 0% 100%)" }}
+                                className="text-black border border-border shadow-lg rounded-md max-h-60 overflow-y-auto"
+                              >
                                 {referralSources.map((source) => (
                                   <SelectItem
                                     key={source}
@@ -989,9 +997,10 @@ export function BookingForm({ type }) {
                     })}
                   </div>
                   {/* ✅ Additional Services */}
-                  <FormDescription className="mt-6">
+                  <FormDescription className="mt-6 text-xl font-semibold text-pretty">
                     I would also like BTM to arrange the following for me.
                   </FormDescription>
+
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mt-6">
                     {additionalServices.map((service) => {
                       const isSelected = selectedServices?.includes(service.id);

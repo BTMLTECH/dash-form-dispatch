@@ -4,14 +4,30 @@
   padding: 2rem;
   text-align: center;
 
-  /* ✅ Brand Colors */
+  /* 🌟 Brand Colours (BTM Orange–Gold Theme) */
+  --brand-color: #ffa30f;          /* Primary orange-gold */
+  --brand-dark: #e08500;           /* Hover / focus tone */
+  --brand-light: #fff7e6;          /* Soft background orange tint */
+  --brand-lighter: #fffaf0;        /* Subtle lighter variant */
+  --brand-border: #f9d6a0;         /* Warm gold border */
+  --brand-focus: rgba(255, 163, 15, 0.25); /* Input / glow focus ring */
+
+  /* 🩶 Metal Gradient */
   --metal-gradient: linear-gradient(
     135deg,
     #000000 0%,
     #4d4d4d 20%,
     #ffffff 50%,
-    #D8D9DC 80%,
+    #d8d9dc 80%,
     #000000 100%
+  );
+
+  /* 🧡 Form background gradient (faint yellow-orange) */
+  --form-gradient: linear-gradient(
+    145deg,
+    #fffaf4 0%,
+    #fff5e1 50%,
+    #fffaf4 100%
   );
 }
 
@@ -27,12 +43,12 @@
   filter: drop-shadow(0 0 2em var(--brand-color));
 }
 
-/* For React Logo or second logo */
+/* React or secondary logo hover */
 .logo.react:hover {
   filter: drop-shadow(0 0 2em var(--brand-color));
 }
 
-/* ✅ Logo animation */
+/* ✅ Logo Animation */
 @keyframes logo-spin {
   from {
     transform: rotate(0deg);
@@ -48,23 +64,22 @@
   }
 }
 
-
-
+/* ✅ Card Styles */
 .card {
   padding: 2em;
-  border: 1px solid #ccc;
+  border: 1px solid var(--brand-border);
   border-radius: 12px;
-  background: var(--metal-gradient);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+  background: var(--form-gradient);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
   color: #000;
 }
 
-/* ✅ Generic text */
+/* ✅ Text */
 .read-the-docs {
   color: #555;
 }
 
-/* ✅ Brand Themed Buttons */
+/* ✅ Brand Buttons */
 button,
 input[type="submit"],
 .btn {
@@ -81,7 +96,7 @@ input[type="submit"],
 button:hover,
 input[type="submit"]:hover,
 .btn:hover {
-  background-color: #cf5900;
+  background-color: var(--brand-dark);
 }
 
 button:active,
@@ -96,13 +111,17 @@ input[type="checkbox"] {
   accent-color: var(--brand-color);
 }
 
-/* ✅ Headings and highlights */
-h1, h2, h3, h4, h5 {
+/* ✅ Headings & Highlights */
+h1,
+h2,
+h3,
+h4,
+h5 {
   color: var(--brand-color);
   font-weight: 700;
 }
 
-/* ✅ Input & Textarea styling with brand color */
+/* ✅ Input & Textarea Styling */
 input[type="text"],
 input[type="email"],
 input[type="number"],
@@ -111,22 +130,22 @@ input[type="url"],
 input[type="password"],
 textarea,
 select {
-  border: 1px solid #ccc;
+  border: 1px solid var(--brand-border);
   border-radius: 8px;
   padding: 0.5rem 0.75rem;
   width: 100%;
   transition: border-color 0.3s ease, box-shadow 0.3s ease;
   font-size: 1rem;
-  background-color: #fff;
+  background-color: #fffaf5;
 }
 
-/* ✅ Placeholder styling */
+/* ✅ Placeholder */
 input::placeholder,
 textarea::placeholder {
   color: #999;
 }
 
-/* ✅ Hover & Focus states */
+/* ✅ Hover & Focus States */
 input:hover,
 textarea:hover,
 select:hover {
@@ -138,6 +157,5 @@ textarea:focus,
 select:focus {
   outline: none !important;
   border-color: var(--brand-color);
-  box-shadow: 0 0 0 3px rgba(232, 103, 0, 0.3);
+  box-shadow: 0 0 0 3px var(--brand-focus);
 }
-

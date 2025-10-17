@@ -4,56 +4,87 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;       /* white */
-    --foreground: 0 0% 0%;        /* black */
+    /* 🎨 BTM Brand Palette (Warm Orange–Gold) */
+    --brand-color: #ffa30f;
+    --brand-light: #fff7e6;
+    --brand-lighter: #fffaf0;
+    --brand-border: #f9d6a0;
+    --brand-focus: rgba(255, 163, 15, 0.25);
+    --brand-dark: #e08500;
 
-    --primary: 240 4% 85%;        /* #D8D9DC */
-    --primary-foreground: 0 0% 0%;
+    /* 🌤️ Light Mode */
+    --background: 0 0% 100%;
+    --foreground: 0 0% 10%;
 
-    --secondary: 0 0% 100%;
-    --secondary-foreground: 0 0% 0%;
+    --primary: 36 100% 52%;             /* #ffa30f */
+    --primary-foreground: 0 0% 100%;
 
-    --muted: 240 4% 90%;
-    --muted-foreground: 0 0% 40%;
+    --secondary: 36 100% 96%;           /* pale warm tint */
+    --secondary-foreground: 36 85% 35%;
 
-    --accent: 240 4% 85%;
-    --accent-foreground: 0 0% 0%;
+    --muted: 36 33% 92%;                /* soft beige */
+    --muted-foreground: 36 25% 35%;
 
-    --destructive: 0 84.2% 60.2%;
+    --accent: 36 100% 94%;              /* faint orange highlight */
+    --accent-foreground: 36 85% 25%;
+
+    --destructive: 0 84% 60%;           /* red */
     --destructive-foreground: 0 0% 100%;
 
-    --border: 240 4% 85%;
-    --input: 240 4% 85%;
-    --ring: 240 4% 85%;
+    --border: 36 45% 85%;               /* soft gold border */
+    --input: 36 45% 85%;
+    --ring: 36 100% 52%;                /* brand orange focus ring */
 
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 0%;
+    --card-foreground: 0 0% 10%;
   }
 
+  /* 🌙 Dark Mode */
   .dark {
-    --background: 0 0% 0%;
-    --foreground: 0 0% 100%;
+    --background: 0 0% 8%;
+    --foreground: 0 0% 95%;
 
-    --primary: 240 4% 85%;
-    --primary-foreground: 0 0% 0%;
+    --primary: 36 90% 55%;              /* bright amber for dark mode */
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 0 0% 20%;
-    --secondary-foreground: 0 0% 100%;
+    --secondary: 36 25% 15%;
+    --secondary-foreground: 36 85% 85%;
 
-    --muted: 0 0% 20%;
-    --muted-foreground: 0 0% 70%;
+    --muted: 36 20% 15%;
+    --muted-foreground: 36 35% 80%;
 
-    --accent: 240 4% 85%;
-    --accent-foreground: 0 0% 0%;
+    --accent: 36 20% 20%;
+    --accent-foreground: 36 85% 80%;
 
-    --destructive: 0 62.8% 30.6%;
+    --destructive: 0 60% 40%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 240 4% 25%;
-    --input: 240 4% 25%;
-    --ring: 240 4% 85%;
+    --border: 36 25% 25%;
+    --input: 36 25% 25%;
+    --ring: 36 90% 55%;
 
-    --card: 0 0% 0%;
-    --card-foreground: 0 0% 100%;
+    --card: 0 0% 12%;
+    --card-foreground: 0 0% 95%;
+  }
+}
+
+/* ✨ Optional: Subtle Global Tweaks for Consistency */
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+  }
+
+  input,
+  textarea,
+  select {
+    @apply transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-[var(--brand-color)] focus-visible:ring-offset-2;
+  }
+
+  button {
+    @apply font-medium;
   }
 }
