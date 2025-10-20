@@ -1,11 +1,23 @@
+// export const primaryServices = [
+//   {
+//     id: "standard-meet-greet",
+//     label: "Standard Meet & Greet",
+//     price: 20000,
+//     dollar: 20,
+//   },
+//   { id: "vip-meet-greet", label: "VIP Meet & Greet", price: 35000, dollar: 40 },
+// ];
 export const primaryServices = [
   {
     id: "standard-meet-greet",
     label: "Standard Meet & Greet",
-    price: 20000,
-    dollar: 20,
+    prices: { domestic: 15000, international: 20000 },
   },
-  { id: "vip-meet-greet", label: "VIP Meet & Greet", price: 35000, dollar: 40 },
+  {
+    id: "vip-meet-greet",
+    label: "VIP Meet & Greet",
+    prices: { domestic: 30000, international: 35000 },
+  },
 ];
 
 // export const additionalServices = [
@@ -39,7 +51,7 @@ export type AdditionalService =
       id: string;
       label: string;
       price: number;
-      dollar: number;
+
       options?: undefined;
     }
   | {
@@ -47,7 +59,6 @@ export type AdditionalService =
       label: string;
       options: ServiceOption[];
       price?: undefined;
-      dollar?: undefined;
     };
 
 export const additionalServices: AdditionalService[] = [
@@ -70,9 +81,8 @@ export const additionalServices: AdditionalService[] = [
   },
   {
     id: "lounge-services",
-    label: "Lounge Services",
-    price: 40000, // NGN
-    dollar: 20, // USD (already known)
+    label: "International Lounge Access",
+    price: 30200, // NGN
   },
   {
     id: "escort-services",
@@ -86,7 +96,6 @@ export const additionalServices: AdditionalService[] = [
     id: "tour-entertainment",
     label: "Tour / Entertainment",
     price: 0,
-    dollar: 0,
   },
 ];
 

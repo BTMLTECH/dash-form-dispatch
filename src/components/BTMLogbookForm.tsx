@@ -180,29 +180,7 @@ export function BookingForm({ type }) {
   const [selectedOptions, setSelectedOptions] = useState<{
     [key: string]: string;
   }>({});
-  // const form = useForm<FormData>({
-  //   resolver: zodResolver(formSchema),
-  //   defaultValues: {
-  //     fullName: "",
-  //     email: "",
-  //     phone: "",
-  //     services: [],
-  //     flightDate: "",
-  //     flightTime: "",
-  //     flightNumber: "",
-  //     departureCity: "",
-  //     arrivalCity: "",
-  //     passengers: "",
-  //     specialRequests: "",
-  //     discountCode: "",
-  //     referralSource: "",
-  //     totalPrice: 0,
-  //     selectedServicesDetails: [],
-  //   },
-  // });
-  // const selectedServices = form.watch("services");
 
-  // Choose cities based on type
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -234,154 +212,113 @@ export function BookingForm({ type }) {
   const arrivalCities =
     type === "domestic" ? domesticCities : internationalCities;
 
-  // useEffect(() => {
-  //   const total = selectedServices?.reduce((acc, serviceId) => {
-  //     const svc = services.find((s) => s.id === serviceId);
-  //     return acc + (svc?.price || 0);
-  //   }, 0);
-  //   setTotalPrice(total);
-  // }, [selectedServices]);
   useEffect(() => {
-    // Calculate total for selected primary services
+    // 🧮 Calculate totals based on selected options
     const totalNGN =
       selectedServices?.reduce((acc, serviceId) => {
         const svc = primaryServices.find((s) => s.id === serviceId);
-        return acc + (svc?.price || 0);
+        const selectedKey = selectedOptions?.[serviceId]; // domestic/international
+        return acc + (svc?.prices?.[selectedKey] || 0);
       }, 0) || 0;
 
-    const totalUSD =
-      selectedServices?.reduce((acc, serviceId) => {
-        const svc = primaryServices.find((s) => s.id === serviceId);
-        return acc + (svc?.dollar || 0);
-      }, 0) || 0;
+    // 💵 Convert to USD dynamically
+    const totalUSD = convert(totalNGN, "NGN", "USD");
 
-    // ✅ Apply 10% discount if return airport service selected
+    // ✅ Apply discount if return service is selected
     const isReturnService = form.watch("returnService");
-    const discountFactor = isReturnService ? 0.9 : 1; // 10% off
+    const discountFactor = isReturnService ? 0.9 : 1;
 
     const discountedNGN = totalNGN * discountFactor;
     const discountedUSD = totalUSD * discountFactor;
 
+    // Update state + form
     setTotalPrice(discountedNGN);
     setTotalDollarPrice(discountedUSD);
 
-    // ✅ Sync with form state
     form.setValue("totalPrice", discountedNGN);
     form.setValue("totalDollarPrice", discountedUSD);
-  }, [selectedServices, form.watch("returnService")]);
+  }, [selectedServices, selectedOptions, form.watch("returnService")]);
 
-  // useEffect(() => {
-  //   // Only include primary services in total calculation
-  //   const totalNGN =
-  //     selectedServices?.reduce((acc, serviceId) => {
-  //       const svc = primaryServices.find((s) => s.id === serviceId);
-  //       return acc + (svc?.price || 0);
-  //     }, 0) || 0;
+  //  const onSubmit = async (data: FormData) => {
+  //     try {
+  //       setIsSubmitting(true);
 
-  //   const totalUSD =
-  //     selectedServices?.reduce((acc, serviceId) => {
-  //       const svc = primaryServices.find((s) => s.id === serviceId);
-  //       return acc + (svc?.dollar || 0);
-  //     }, 0) || 0;
+  //       // Separate primary and additional services
+  //       const selectedPrimary = primaryServices.filter((service) =>
+  //         data.services.includes(service.id)
+  //       );
 
-  //   setTotalPrice(totalNGN);
-  //   setTotalDollarPrice(totalUSD);
-  // }, [selectedServices]);
+  //       const selectedAdditional = additionalServices.filter((service) =>
+  //         data.services.includes(service.id)
+  //       );
 
-  // useEffect(() => {
-  //   const totalNGN =
-  //     selectedServices?.reduce((acc, serviceId) => {
-  //       const svc = services.find((s) => s.id === serviceId);
-  //       return acc + (svc?.price || 0);
-  //     }, 0) || 0;
+  //       // Calculate total price from primary services
+  //       let totalPrice = selectedPrimary.reduce(
+  //         (acc, service) => acc + service.price,
+  //         0
+  //       );
 
-  //   const totalUSD =
-  //     selectedServices?.reduce((acc, serviceId) => {
-  //       const svc = services.find((s) => s.id === serviceId);
-  //       return acc + (svc?.dollar || 0);
-  //     }, 0) || 0;
-
-  //   setTotalPrice(totalNGN);
-  //   setTotalDollarPrice(totalUSD);
-  // }, [selectedServices]);
-
-  // const onSubmit = async (data: FormData) => {
-  //   try {
-  //     setIsSubmitting(true);
-
-  //     // 🧮 Calculate total price based on selected services
-  //     const selectedDetails = services.filter((service) =>
-  //       data.services.includes(service.id)
-  //     );
-  //     const totalPrice = selectedDetails.reduce(
-  //       (acc, service) => acc + service.price,
-  //       0
-  //     );
-
-  //     const payload = {
-  //       ...data,
-  //       totalPrice,
-  //       selectedServicesDetails: selectedDetails,
-  //     };
-
-  //     const response = await axios.post(
-  //       // Use production URL in prod:
-  //       // "https://airport-server-onj2.onrender.com/api/booking",
-  //       "http://localhost:5000/api/booking",
-  //       payload,
-  //       {
-  //         headers: {
-  //           "Content-Type": "application/json",
-  //         },
+  //       // ✅ Apply 10% discount if return airport service is selected
+  //       if (data.returnService) {
+  //         totalPrice = totalPrice * 0.9;
   //       }
-  //     );
 
-  //     toast.success("Booking request submitted successfully!", {
-  //       description:
-  //         "Our team will contact you shortly to confirm your booking.",
-  //     });
+  //       // Combine all selected services for reference
+  //       const selectedDetails = [...selectedPrimary, ...selectedAdditional];
 
-  //     form.reset();
-  //   } catch (error: any) {
-  //     toast.error("Failed to submit booking request", {
-  //       description: error.response?.data?.message || error.message,
-  //     });
-  //   } finally {
-  //     setIsSubmitting(false);
-  //   }
-  // };
+  //       const payload = {
+  //         ...data,
+  //         totalPrice,
+  //         selectedServicesDetails: selectedDetails,
+  //         type,
+  //       };
+
+  //       await api.submitCustomerDetails(payload, "booking");
+
+  //       toast.success("Booking request submitted successfully!", {
+  //         description:
+  //           "Our team will contact you shortly to confirm your booking.",
+  //       });
+
+  //       form.reset();
+  //     } catch (error: any) {
+  //       toast.error("Failed to submit booking request", {
+  //         description: error.response?.data?.message || error.message,
+  //       });
+  //     } finally {
+  //       setIsSubmitting(false);
+  //     }
+  //   };
+
   const onSubmit = async (data: FormData) => {
     try {
       setIsSubmitting(true);
 
-      // Separate primary and additional services
-      const selectedPrimary = primaryServices.filter((service) =>
-        data.services.includes(service.id)
-      );
+      const selectedPrimary = primaryServices
+        .filter((service) => data.services.includes(service.id))
+        .map((svc) => ({
+          ...svc,
+          selectedFlight: selectedOptions[svc.id],
+          finalPrice: svc.prices?.[selectedOptions[svc.id]] || 0,
+        }));
 
       const selectedAdditional = additionalServices.filter((service) =>
         data.services.includes(service.id)
       );
 
-      // Calculate total price from primary services
       let totalPrice = selectedPrimary.reduce(
-        (acc, service) => acc + service.price,
+        (acc, svc) => acc + svc.finalPrice,
         0
       );
 
-      // ✅ Apply 10% discount if return airport service is selected
-      if (data.returnService) {
-        totalPrice = totalPrice * 0.9;
-      }
+      if (data.returnService) totalPrice *= 0.9;
 
-      // Combine all selected services for reference
       const selectedDetails = [...selectedPrimary, ...selectedAdditional];
 
       const payload = {
         ...data,
         totalPrice,
         selectedServicesDetails: selectedDetails,
-        type,
       };
 
       await api.submitCustomerDetails(payload, "booking");
@@ -401,127 +338,9 @@ export function BookingForm({ type }) {
     }
   };
 
-  // const onSubmit = async (data: FormData) => {
-  //   try {
-  //     setIsSubmitting(true);
-
-  //     // Separate primary and additional services
-  //     const selectedPrimary = primaryServices.filter((service) =>
-  //       data.services.includes(service.id)
-  //     );
-
-  //     const selectedAdditional = additionalServices.filter((service) =>
-  //       data.services.includes(service.id)
-  //     );
-
-  //     // Only calculate total price from primary services
-  //     const totalPrice = selectedPrimary.reduce(
-  //       (acc, service) => acc + service.price,
-  //       0
-  //     );
-
-  //     // Combine all selected services for reference
-  //     const selectedDetails = [...selectedPrimary, ...selectedAdditional];
-
-  //     const payload = {
-  //       ...data,
-  //       totalPrice,
-  //       selectedServicesDetails: selectedDetails,
-  //       type,
-  //     };
-
-  //     await api.submitCustomerDetails(data, "booking");
-
-  //     toast.success("Booking request submitted successfully!", {
-  //       description:
-  //         "Our team will contact you shortly to confirm your booking.",
-  //     });
-
-  //     form.reset();
-  //   } catch (error: any) {
-  //     toast.error("Failed to submit booking request", {
-  //       description: error.response?.data?.message || error.message,
-  //     });
-  //   } finally {
-  //     setIsSubmitting(false);
-  //   }
-  // };
-
-  // const onSubmit = async (data: FormData) => {
-  //   try {
-  //     setIsSubmitting(true);
-
-  //     const selectedDetails = services.filter((service) =>
-  //       data.services.includes(service.id)
-  //     );
-  //     const totalPrice = selectedDetails.reduce(
-  //       (acc, service) => acc + service.price,
-  //       0
-  //     );
-
-  //     const payload = {
-  //       ...data,
-  //       totalPrice,
-  //       selectedServicesDetails: selectedDetails,
-  //       type,
-  //     };
-
-  //     await api.submitCustomerDetails(data, "booking");
-
-  //     // const response = await axios.post(
-  //     //   // In production, use your deployed server URL
-  //     //   // "https://airport-server-onj2.onrender.com/api/booking",
-  //     //   "http://localhost:5000/api/booking",
-  //     //   payload,
-  //     //   {
-  //     //     headers: {
-  //     //       "Content-Type": "application/json",
-  //     //     },
-  //     //   }
-  //     // );
-
-  //     toast.success("Booking request submitted successfully!", {
-  //       description:
-  //         "Our team will contact you shortly to confirm your booking.",
-  //     });
-
-  //     form.reset();
-  //   } catch (error: any) {
-  //     toast.error("Failed to submit booking request", {
-  //       description: error.response?.data?.message || error.message,
-  //     });
-  //   } finally {
-  //     setIsSubmitting(false);
-  //   }
-  // };
-
   return (
     <div className="min-h-screen bg-gray-50 py-10 px-4">
       <div className="max-w-3xl mx-auto">
-        {/* <header className="relative flex flex-col items-center text-center mb-10 rounded-xl border border-gray-400 bg-gradient-to-b from-white to-gray-100 shadow-sm p-6">
-          <div className="flex items-center justify-center gap-4 mb-3">
-            <img
-              src="/assets/btm.png"
-              alt="BTM Logo"
-              className="h-14 w-auto drop-shadow-sm"
-            />
-            <div className="text-left">
-              <h1 className="text-3xl font-extrabold tracking-tight text-pretty">
-                Airport Protocol Services
-              </h1>
-              <p className="text-sm text-gray-500 mt-1">
-                At BTM, we redefine the airport experience with excellence,
-                comfort, and class. From swift airport transfers and executive
-                car hire to personalized escort, lounge access, and meet & greet
-                services — every detail is designed to complement your journey.
-                Simply fill out the form below with your travel details, and our
-                team will curate a tailored experience that ensures efficiency,
-                ease, and exclusivity from start to finish.
-              </p>
-            </div>
-          </div>
-          <div className="w-32 h-[2px] bg-gradient-to-r from-transparent via-gray-500 to-transparent rounded-full"></div>
-        </header> */}
         <ReusableHeader
           title="Airport Protocol Services"
           description="At BTM, we redefine the airport experience with distinction, comfort, and sophistication. From seamless airport transfers and executive car hire to personalised escorting, lounge access, and meet & greet services — every detail is tailored to complement your journey. Simply complete the form below with your travel details, and our team will curate a bespoke experience that ensures efficiency, ease, and exclusivity from start to finish."
@@ -951,9 +770,11 @@ export function BookingForm({ type }) {
                     <CurrencyToggle />
                   </div>
                   {/* ✅ Primary Services */}
+                  {/* ✅ Primary Services */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mt-4">
                     {primaryServices.map((service) => {
                       const isSelected = selectedServices?.includes(service.id);
+                      const selectedOpt = selectedOptions?.[service.id];
 
                       return (
                         <FormField
@@ -962,16 +783,40 @@ export function BookingForm({ type }) {
                           name="services"
                           render={({ field }) => (
                             <div
-                              className={`relative border rounded-xl p-4 cursor-pointer transition-all ${
+                              className={`relative border rounded-xl p-4 cursor-pointer transition-all overflow-hidden ${
                                 isSelected
                                   ? "border-primary bg-gray-50 shadow-md"
                                   : "border-gray-300 hover:border-primary/50 hover:shadow-sm"
                               }`}
-                              onClick={() => {
+                              style={{
+                                transition:
+                                  "max-height 0.3s ease, background-color 0.3s ease",
+                                maxHeight: isSelected ? "400px" : "100px",
+                              }}
+                              onClick={(e) => {
+                                if (
+                                  (e.target as HTMLElement).closest(
+                                    ".option-item"
+                                  )
+                                )
+                                  return;
+
                                 if (isSelected) {
-                                  field.onChange([]);
+                                  field.onChange(
+                                    field.value?.filter(
+                                      (id: string) => id !== service.id
+                                    )
+                                  );
+                                  setSelectedOptions((prev) => {
+                                    const copy = { ...prev };
+                                    delete copy[service.id];
+                                    return copy;
+                                  });
                                 } else {
-                                  field.onChange([service.id]);
+                                  field.onChange([
+                                    ...(field.value || []),
+                                    service.id,
+                                  ]);
                                 }
                               }}
                             >
@@ -981,21 +826,69 @@ export function BookingForm({ type }) {
                                 </div>
                               )}
                               <div className="flex justify-between items-center">
-                                <h4 className="font-medium text-gray-800">
+                                <h4
+                                  className={`font-medium ${
+                                    isSelected
+                                      ? "text-gray-800"
+                                      : "text-gray-400"
+                                  }`}
+                                >
                                   {service.label}
                                 </h4>
-                                <span className="font-bold text-primary">
-                                  {currency === "NGN"
-                                    ? `₦${service.price.toLocaleString()}`
-                                    : `$${service.dollar.toLocaleString()}`}
-                                </span>
                               </div>
+
+                              {/* 👇 Nested Domestic/International selection */}
+                              {isSelected && (
+                                <div className="mt-3 space-y-2">
+                                  {Object.entries(service.prices).map(
+                                    ([key, price]) => {
+                                      const isOptSelected = selectedOpt === key;
+                                      const usdValue = convert(
+                                        price,
+                                        "NGN",
+                                        "USD"
+                                      );
+
+                                      return (
+                                        <div
+                                          key={key}
+                                          className={`option-item flex justify-between items-center p-2 rounded-lg border cursor-pointer transition-all ${
+                                            isOptSelected
+                                              ? "border-primary bg-primary/10 text-primary font-semibold"
+                                              : "border-gray-300 hover:bg-gray-50"
+                                          }`}
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            setSelectedOptions((prev) => ({
+                                              ...prev,
+                                              [service.id]:
+                                                prev[service.id] === key
+                                                  ? ""
+                                                  : key,
+                                            }));
+                                          }}
+                                        >
+                                          <span className="capitalize">
+                                            {key} Flight
+                                          </span>
+                                          <span className="text-sm">
+                                            {currency === "NGN"
+                                              ? `₦${price.toLocaleString()}`
+                                              : `$${usdValue.toFixed(2)}`}
+                                          </span>
+                                        </div>
+                                      );
+                                    }
+                                  )}
+                                </div>
+                              )}
                             </div>
                           )}
                         />
                       );
                     })}
                   </div>
+
                   {/* ✅ Additional Services */}
                   <FormDescription className="mt-6 text-xl font-semibold text-pretty">
                     I would also like BTM to arrange the following for me.
@@ -1072,16 +965,11 @@ export function BookingForm({ type }) {
                                 </h4>
 
                                 {/* 💰 Price handling */}
+                                {/* 💰 Price handling */}
                                 {!service.options && (
                                   <span className="font-bold text-primary text-sm">
                                     {service.price
-                                      ? // ✅ Lounge has both, so use correct one
-                                        service.dollar
-                                        ? currency === "NGN"
-                                          ? format(service.price, "NGN")
-                                          : format(service.dollar, "USD")
-                                        : // ✅ Convert dynamically if USD missing
-                                        currency === "NGN"
+                                      ? currency === "NGN"
                                         ? format(service.price, "NGN")
                                         : format(
                                             convert(

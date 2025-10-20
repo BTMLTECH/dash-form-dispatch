@@ -219,6 +219,7 @@ const BTMLogbookForm = () => {
 
             {/* ✅ Arrival Section */}
             {/* ✅ Condensed Arrival Feedback Section */}
+            {/* ✅ Condensed Arrival Feedback Section */}
             {selectedService === "arrival" && (
               <Card className="shadow-sm border-t-4 border-primary bg-card text-card-foreground">
                 <CardHeader>
@@ -228,15 +229,13 @@ const BTMLogbookForm = () => {
                 </CardHeader>
 
                 <CardContent className="space-y-6">
-                  {/* Met by Protocol Officer */}
+                  {/* 🧍 Where Were You Met */}
                   <FormField
                     control={form.control}
                     name="meetingLocation"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>
-                          Were you met by the Protocol Officer?
-                        </FormLabel>
+                        <FormLabel>Where were you met?</FormLabel>
                         <FormControl>
                           <RadioGroup
                             onValueChange={field.onChange}
@@ -244,12 +243,22 @@ const BTMLogbookForm = () => {
                             className="flex gap-6 mt-2"
                           >
                             <div className="flex items-center space-x-2">
-                              <RadioGroupItem value="yes" id="met-yes" />
-                              <label htmlFor="met-yes">Yes</label>
+                              <RadioGroupItem
+                                value="immigration"
+                                id="met-immigration"
+                              />
+                              <label htmlFor="met-immigration">
+                                Immigration
+                              </label>
                             </div>
                             <div className="flex items-center space-x-2">
-                              <RadioGroupItem value="no" id="met-no" />
-                              <label htmlFor="met-no">No</label>
+                              <RadioGroupItem
+                                value="outside-hall"
+                                id="met-outside"
+                              />
+                              <label htmlFor="met-outside">
+                                Outside the hall
+                              </label>
                             </div>
                           </RadioGroup>
                         </FormControl>
@@ -258,7 +267,7 @@ const BTMLogbookForm = () => {
                     )}
                   />
 
-                  {/* Rating 1–10 */}
+                  {/* ⭐ Rating 1–10 */}
                   <FormField
                     control={form.control}
                     name="arrivalRating"
@@ -273,17 +282,19 @@ const BTMLogbookForm = () => {
                           >
                             {[...Array(10)].map((_, i) => {
                               const val = (i + 1).toString();
+
+                              // 🎭 Custom emoji per rating
                               const emojis = [
-                                "😡",
-                                "😡",
-                                "😕",
-                                "😕",
-                                "😐",
-                                "😐",
-                                "🙂",
-                                "🙂",
-                                "😍",
-                                "😍",
+                                "😡", // 1
+                                "😠", // 2
+                                "😞", // 3
+                                "😕", // 4
+                                "😐", // 5
+                                "🙂", // 6
+                                "😊", // 7
+                                "😃", // 8
+                                "🤩", // 9
+                                "😍", // 10
                               ];
                               const emoji = emojis[i];
 
@@ -291,9 +302,9 @@ const BTMLogbookForm = () => {
                                 <label
                                   key={val}
                                   htmlFor={`rating-${val}`}
-                                  className={`flex flex-col items-center justify-center w-10 h-12 rounded-md border text-sm cursor-pointer select-none ${
+                                  className={`flex flex-col items-center justify-center w-10 h-12 rounded-md border text-sm cursor-pointer select-none transition-all ${
                                     field.value === val
-                                      ? "bg-primary text-white border-primary"
+                                      ? "bg-primary text-white border-primary shadow-sm scale-105"
                                       : "hover:bg-gray-100 border-gray-300"
                                   }`}
                                 >
@@ -319,18 +330,22 @@ const BTMLogbookForm = () => {
                             })}
                           </RadioGroup>
                         </FormControl>
+
                         {field.value && (
-                          <p className="text-sm text-gray-600 mt-1">
+                          <p className="text-sm text-gray-600 mt-2">
                             You rated your experience:{" "}
-                            <strong>{field.value}/10</strong>
+                            <strong className="text-primary">
+                              {field.value}/10
+                            </strong>
                           </p>
                         )}
+
                         <FormMessage />
                       </FormItem>
                     )}
                   />
 
-                  {/* Optional Comment */}
+                  {/* 💬 Optional Comment */}
                   <FormField
                     control={form.control}
                     name="arrivalComment"
@@ -368,7 +383,7 @@ const BTMLogbookForm = () => {
                 </CardHeader>
 
                 <CardContent className="space-y-6">
-                  {/* Protocol Officer Meet */}
+                  {/* 1️⃣ Protocol Officer Meet */}
                   <FormField
                     control={form.control}
                     name="protocolOfficerMeet"
@@ -404,40 +419,7 @@ const BTMLogbookForm = () => {
                     )}
                   />
 
-                  {/* Immigration Assistance */}
-                  <FormField
-                    control={form.control}
-                    name="immigrationAssistance"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>
-                          Were you assisted through immigration?
-                        </FormLabel>
-                        <FormControl>
-                          <RadioGroup
-                            onValueChange={field.onChange}
-                            value={field.value}
-                            className="flex gap-4 mt-2"
-                          >
-                            <div className="flex items-center space-x-2">
-                              <RadioGroupItem
-                                value="yes"
-                                id="immigration-yes"
-                              />
-                              <label htmlFor="immigration-yes">Yes</label>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <RadioGroupItem value="no" id="immigration-no" />
-                              <label htmlFor="immigration-no">No</label>
-                            </div>
-                          </RadioGroup>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  {/* Meeting Location */}
+                  {/* 2️⃣ Meeting Location (swapped up) */}
                   <FormField
                     control={form.control}
                     name="meetInOrOutside"
@@ -470,7 +452,40 @@ const BTMLogbookForm = () => {
                     )}
                   />
 
-                  {/* Feedback Rating */}
+                  {/* 3️⃣ Immigration Assistance (moved down) */}
+                  <FormField
+                    control={form.control}
+                    name="immigrationAssistance"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>
+                          Were you assisted through immigration?
+                        </FormLabel>
+                        <FormControl>
+                          <RadioGroup
+                            onValueChange={field.onChange}
+                            value={field.value}
+                            className="flex gap-4 mt-2"
+                          >
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem
+                                value="yes"
+                                id="immigration-yes"
+                              />
+                              <label htmlFor="immigration-yes">Yes</label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="no" id="immigration-no" />
+                              <label htmlFor="immigration-no">No</label>
+                            </div>
+                          </RadioGroup>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* 4️⃣ Feedback Rating */}
                   <FormField
                     control={form.control}
                     name="departureRating"
@@ -488,16 +503,16 @@ const BTMLogbookForm = () => {
                             {[...Array(10)].map((_, i) => {
                               const val = (i + 1).toString();
                               const emojis = [
-                                "😡",
-                                "😡",
-                                "😕",
-                                "😕",
-                                "😐",
-                                "😐",
-                                "🙂",
-                                "🙂",
-                                "😍",
-                                "😍",
+                                "😡", // 1
+                                "😠", // 2
+                                "😞", // 3
+                                "😕", // 4
+                                "😐", // 5
+                                "🙂", // 6
+                                "😊", // 7
+                                "😃", // 8
+                                "🤩", // 9
+                                "😍", // 10
                               ];
                               const emoji = emojis[i];
 
@@ -505,9 +520,9 @@ const BTMLogbookForm = () => {
                                 <label
                                   key={val}
                                   htmlFor={`departure-rating-${val}`}
-                                  className={`flex flex-col items-center justify-center w-10 h-12 rounded-md border text-sm cursor-pointer select-none ${
+                                  className={`flex flex-col items-center justify-center w-10 h-12 rounded-md border text-sm cursor-pointer select-none transition-all ${
                                     field.value === val
-                                      ? "bg-primary text-white border-primary"
+                                      ? "bg-primary text-white border-primary shadow-sm scale-105"
                                       : "hover:bg-gray-100 border-gray-300"
                                   }`}
                                 >
@@ -543,7 +558,7 @@ const BTMLogbookForm = () => {
                     )}
                   />
 
-                  {/* Optional Comment */}
+                  {/* 5️⃣ Optional Comment */}
                   <FormField
                     control={form.control}
                     name="departureComment"
