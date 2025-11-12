@@ -63,53 +63,10 @@ const formSchema = z
     }
   );
 
-// const formSchema = z
-//   .object({
-//     passengerName: z.string().min(1, "Passenger name is required"),
-//     contact: z.string().min(1, "Contact is required"),
-//     email: z.string().email("Invalid email"),
-//     protocolOfficer: z.string().min(1, "Assigned protocol officer is required"),
-
-// badgeVerification: z
-//   .enum(["yes", "no"])
-//   .refine((val) => val !== undefined, {
-//     message: "Please select badge verification",
-//   }),
-
-// checkInIssues: z.enum(["yes", "no"]).refine((val) => val !== undefined, {
-//   message: "Please select if there were any issues",
-// }),
-
-//     checkInComment: z.string().optional(),
-//   })
-//   .refine(
-//     (data) => {
-//       if (data.checkInIssues === "yes") {
-//         return data.checkInComment && data.checkInComment.trim().length > 0;
-//       }
-//       return true;
-//     },
-//     {
-//       path: ["checkInComment"],
-//       message: "Please provide details about the check-in issues",
-//     }
-//   );
 
 export default function CheckInReportForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // const form = useForm<z.infer<typeof formSchema>>({
-  //   resolver: zodResolver(formSchema),
-  //   defaultValues: {
-  //     passengerName: "",
-  //     contact: "",
-  //     email: "",
-  //     protocolOfficer: "",
-  //     badgeVerification: undefined,
-  //     checkInIssues: undefined,
-  //     checkInComment: "",
-  //   } as any,
-  // });
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -124,38 +81,38 @@ export default function CheckInReportForm() {
       checkInComment: "",
     },
   });
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    try {
-      setIsSubmitting(true);
-      const response = await api.submitCustomerDetails(values, "customer");
-      //   await axios.post(
-      //   // "http://localhost:5000/api/customer",
-      //   "https://airport-protocol.onrender.com/api/customer",
-      //   values
-      // );
-      if (response.data.success) {
-        toast({
-          title: "Customer details is Successfully",
-          description: "Your customer details have been recorded.",
-        });
-        form.reset();
-      } else {
-        toast({
-          title: "Submission Failed",
-          description: response.data.message || "Something went wrong.",
-          variant: "destructive",
-        });
-      }
-    } catch (error: any) {
+const onSubmit = async (values: z.infer<typeof formSchema>) => {
+  try {
+    setIsSubmitting(true);
+
+    const response = await api.submitCustomerDetails(values, "customer");
+
+    // Check based on success flag
+    if (response?.success) {
       toast({
-        title: "Server Error",
-        description: "Could not connect to the server.",
+        title: "✅ Customer Details Submitted",
+        description: response.message || "Your customer details have been recorded successfully.",
+      });
+      form.reset();
+    } else {
+      toast({
+        title: "❌ Submission Failed",
+        description: response?.message || "Something went wrong while submitting your details.",
         variant: "destructive",
       });
-    } finally {
-      setIsSubmitting(false);
     }
-  };
+  } catch (error: any) {
+    console.error("❌ onSubmit error:", error);
+
+    toast({
+      title: "Server Error",
+      description: "Could not connect to the server.",
+      variant: "destructive",
+    });
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
   return (
     <div className="min-h-screen bg-gray-50 py-10 px-4">

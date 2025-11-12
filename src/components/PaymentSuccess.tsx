@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { CheckCircle } from "lucide-react";
+import { CheckCircle, XCircle } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 import { api } from "@/lib/api";
 import Spinner from "./ui/Spinner";
@@ -22,13 +22,14 @@ const PaymentSuccess: React.FC = () => {
       try {
         const data = await api.verifyPayment(reference);
 
-        if (data.success) {
-          setPayment(data.payment);
+        if (data.success && data.payment) {
+          setPayment(data.payment); // Store the whole payment object
         } else {
-          setError("Payment could not be verified.");
+          setError("Payment could not be verified or not found.");
         }
       } catch (err) {
-        setError("Error verifying payment.");
+        console.error("Payment verification error:", err);
+        setError("Error verifying payment. Please contact support.");
       } finally {
         setLoading(false);
       }
@@ -50,11 +51,23 @@ const PaymentSuccess: React.FC = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-red-50">
-        <p className="text-red-700 font-medium">{error}</p>
+      <div className="min-h-screen flex flex-col items-center justify-center bg-red-50 text-center px-4">
+        <XCircle className="text-red-600 w-16 h-16 mb-4" />
+        <p className="text-red-700 font-semibold mb-4">{error}</p>
+        <Link
+          to="/"
+          className="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg"
+        >
+          Go Back Home
+        </Link>
       </div>
     );
   }
+
+  const customerName = payment.fullName || "Customer";
+  const customerEmail = payment.email || "your email";
+  const totalAmount = payment.totalPrice || 0;
+  const currencySymbol = payment.currency === "USD" ? "$" : "₦";
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-green-50 px-4">
@@ -62,15 +75,17 @@ const PaymentSuccess: React.FC = () => {
       <h1 className="text-2xl font-bold text-green-700 mb-2">
         Payment Successful 🎉
       </h1>
+
       <p className="text-gray-700 text-center max-w-md mb-6">
-        Thank you, <strong>{payment?.formData?.personalInfo?.name}</strong>!
+        Thank you, <strong>{customerName}</strong>! <br />
         Your payment of{" "}
         <strong>
-          {payment?.currency === "USD" ? "$" : "₦"}
-          {payment?.totalAmount?.toLocaleString()}
+          {currencySymbol}
+          {totalAmount.toLocaleString()}
         </strong>{" "}
-        has been confirmed. A confirmation email has been sent to{" "}
-        <strong>{payment?.formData?.personalInfo?.email}</strong>.
+        has been confirmed.
+        <br />
+        A confirmation email has been sent to <strong>{customerEmail}</strong>.
       </p>
 
       <Link

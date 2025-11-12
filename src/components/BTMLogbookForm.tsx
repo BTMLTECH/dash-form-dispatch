@@ -24,8 +24,10 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { toast } from "sonner";
-import { Plane, Users, Calendar, Clock, MapPin, Tag } from "lucide-react";
+import { Plane, Users, Calendar, Clock, MapPin, Tag, CloudCog } from "lucide-react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
+
 
 import { Link } from "react-router-dom";
 import CurrencyToggle from "./CurrencyToggle";
@@ -41,43 +43,6 @@ import {
 } from "@/lib/data";
 import ReusableHeader from "./ReusableHeader";
 
-// export const formSchema = z.object({
-//   fullName: z
-//     .string()
-//     .min(2, "Full name must be at least 2 characters")
-//     .max(100),
-//   email: z.string().email("Invalid email address"),
-//   phone: z.string().min(8, "Please include country code").max(20),
-
-//   services: z.array(z.string()).min(1, "Please select at least one service"),
-
-//   flightDate: z.string().min(1, "Flight date is required"),
-//   flightTime: z.string().min(1, "Flight time is required"),
-//   flightNumber: z
-//     .string()
-//     .min(1, "Airline & flight number is required")
-//     .max(50),
-//   departureCity: z.string().min(1, "Departure city is required"),
-//   arrivalCity: z.string().min(1, "Arrival city is required"),
-//   passengers: z.string().min(1, "Number of passengers is required"),
-//   specialRequests: z.string().optional(),
-//   discountCode: z.string().optional(),
-//   referralSource: z.string().optional(),
-
-//   // 🆕 Add total price for submission
-//   totalPrice: z.number().min(0, "Total price is required"),
-
-//   // 🆕 Optional: include details of services selected
-//   selectedServicesDetails: z
-//     .array(
-//       z.object({
-//         id: z.string(),
-//         label: z.string(),
-//         price: z.number(),
-//       })
-//     )
-//     .optional(),
-// });
 
 export const formSchema = z
   .object({
@@ -126,7 +91,7 @@ export const formSchema = z
       )
       .optional(),
   })
-  // ✅ Object-level refinement for conditional validation
+
   .refine(
     (data) => {
       if (data.returnService && !data.returnDate) {
@@ -142,41 +107,14 @@ export const formSchema = z
 
 type FormData = z.infer<typeof formSchema>;
 
-// const services = [
-//   {
-//     id: "standard-meet-greet",
-//     label: "Standard Meet and Greet",
-//     price: 20000,
-//     dollar: 20,
-//   },
-//   {
-//     id: "vip-meet-greet",
-//     label: "VIP Meet and Greet",
-//     price: 35000,
-//     dollar: 40,
-//   },
-//   { id: "car-hire", label: "Car Hire", price: 30000, dollar: 20 }, // Add real price if needed
-//   {
-//     id: "airport-transfer",
-//     label: "Airport Transfer",
-//     price: 30000,
-//     dollar: 20,
-//   },
-//   { id: "lounge-services", label: "Lounge Services", price: 40000, dollar: 20 },
-//   {
-//     id: "escort-services",
-//     label: "Security Escort Vehicle",
-//     price: 30000,
-//     dollar: 20,
-//   },
-// ];
+
 
 export function BookingForm({ type }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [totalPrice, setTotalPrice] = useState(0);
   const [totalDollarPrice, setTotalDollarPrice] = useState(0);
   const { currency, toggleCurrency, format, convert } = useCurrency();
-
+  const navigate = useNavigate();
   const [selectedOptions, setSelectedOptions] = useState<{
     [key: string]: string;
   }>({});
@@ -212,12 +150,14 @@ export function BookingForm({ type }) {
   const arrivalCities =
     type === "domestic" ? domesticCities : internationalCities;
 
+    
+
   useEffect(() => {
     // 🧮 Calculate totals based on selected options
     const totalNGN =
       selectedServices?.reduce((acc, serviceId) => {
         const svc = primaryServices.find((s) => s.id === serviceId);
-        const selectedKey = selectedOptions?.[serviceId]; // domestic/international
+        const selectedKey = selectedOptions?.[serviceId]; 
         return acc + (svc?.prices?.[selectedKey] || 0);
       }, 0) || 0;
 
@@ -239,104 +179,92 @@ export function BookingForm({ type }) {
     form.setValue("totalDollarPrice", discountedUSD);
   }, [selectedServices, selectedOptions, form.watch("returnService")]);
 
-  //  const onSubmit = async (data: FormData) => {
-  //     try {
-  //       setIsSubmitting(true);
 
-  //       // Separate primary and additional services
-  //       const selectedPrimary = primaryServices.filter((service) =>
-  //         data.services.includes(service.id)
-  //       );
+const onSubmit = async (data: FormData) => {
 
-  //       const selectedAdditional = additionalServices.filter((service) =>
-  //         data.services.includes(service.id)
-  //       );
+  try {
+    setIsSubmitting(true);
 
-  //       // Calculate total price from primary services
-  //       let totalPrice = selectedPrimary.reduce(
-  //         (acc, service) => acc + service.price,
-  //         0
-  //       );
+    // -----------------------
+    // Prepare selected primary services
+    // -----------------------
+    const selectedPrimary = primaryServices
+      .filter((service) => data.services.includes(service.id))
+      .map((svc) => ({
+        ...svc,
+        selectedFlight: selectedOptions[svc.id],
+        price: svc.prices?.[selectedOptions[svc.id]] || 0,
+      }));
 
-  //       // ✅ Apply 10% discount if return airport service is selected
-  //       if (data.returnService) {
-  //         totalPrice = totalPrice * 0.9;
-  //       }
+    // Additional services (not included in total)
+    const selectedAdditional = additionalServices
+      .filter((service) => data.services.includes(service.id))
+      .map((svc) => ({ ...svc, price: svc.price || 0 }));
 
-  //       // Combine all selected services for reference
-  //       const selectedDetails = [...selectedPrimary, ...selectedAdditional];
+    // -----------------------
+    // ✅ Calculate total (only from primary)
+    // -----------------------
+    let totalPrice = selectedPrimary.reduce(
+      (acc, svc) => acc + (svc.price || 0),
+      0
+    );
 
-  //       const payload = {
-  //         ...data,
-  //         totalPrice,
-  //         selectedServicesDetails: selectedDetails,
-  //         type,
-  //       };
+    if (data.returnService) totalPrice *= 0.9;
 
-  //       await api.submitCustomerDetails(payload, "booking");
+    const selectedDetails = [...selectedPrimary, ...selectedAdditional];
 
-  //       toast.success("Booking request submitted successfully!", {
-  //         description:
-  //           "Our team will contact you shortly to confirm your booking.",
-  //       });
+  
+        const payload = {
+      ...data,
+      selectedServicesDetails: selectedDetails,
+      type,
+      currency,                
+      totalDollarPrice: data.totalDollarPrice.toFixed(2),
+      totalPrice: data.totalPrice.toFixed(2),
+    };
 
-  //       form.reset();
-  //     } catch (error: any) {
-  //       toast.error("Failed to submit booking request", {
-  //         description: error.response?.data?.message || error.message,
-  //       });
-  //     } finally {
-  //       setIsSubmitting(false);
-  //     }
-  //   };
+    // -----------------------
+    // Send to backend
+    // -----------------------
+    const response = await api.submitCustomerDetails(payload, "booking");
 
-  const onSubmit = async (data: FormData) => {
-    try {
-      setIsSubmitting(true);
+    if (response.url && response.reference) {
+const amountToPay =
+  currency === "USD"
+    ? Math.round(data.totalDollarPrice * 100)
+    : Math.round(data.totalPrice * 100);
 
-      const selectedPrimary = primaryServices
-        .filter((service) => data.services.includes(service.id))
-        .map((svc) => ({
-          ...svc,
-          selectedFlight: selectedOptions[svc.id],
-          finalPrice: svc.prices?.[selectedOptions[svc.id]] || 0,
-        }));
-
-      const selectedAdditional = additionalServices.filter((service) =>
-        data.services.includes(service.id)
-      );
-
-      let totalPrice = selectedPrimary.reduce(
-        (acc, svc) => acc + svc.finalPrice,
-        0
-      );
-
-      if (data.returnService) totalPrice *= 0.9;
-
-      const selectedDetails = [...selectedPrimary, ...selectedAdditional];
-
-      const payload = {
-        ...data,
-        totalPrice,
-        selectedServicesDetails: selectedDetails,
-      };
-
-      await api.submitCustomerDetails(payload, "booking");
-
-      toast.success("Booking request submitted successfully!", {
-        description:
-          "Our team will contact you shortly to confirm your booking.",
+      const handler = (window as any).PaystackPop?.setup({
+        key: import.meta.env.VITE_PUBLIC_PAYSTACK_KEY,
+        email: data.email,
+       amount: amountToPay,
+        currency,
+        ref: response.reference,
+        callback: function (res: any) {
+          navigate(`/payment/success?reference=${res.reference}`);
+        },
+        onClose: function () {
+          toast.error("Payment was not completed.");
+          navigate(`/payment/failed?reference=${response.reference}`);
+        },
       });
 
-      form.reset();
-    } catch (error: any) {
-      toast.error("Failed to submit booking request", {
-        description: error.response?.data?.message || error.message,
-      });
-    } finally {
-      setIsSubmitting(false);
+      handler.openIframe();
+      return;
     }
-  };
+
+    // ❌ If backend didn't send Paystack URL or reference
+    toast.error("Booking request failed", {
+      description: response?.error || "Payment initialization failed.",
+    });
+  } catch (error: any) {
+    toast.error("Failed to submit booking request", {
+      description: error.response?.data?.message || error.message,
+    });
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
   return (
     <div className="min-h-screen bg-gray-50 py-10 px-4">
@@ -485,48 +413,52 @@ export function BookingForm({ type }) {
                     </FormItem>
                   )}
                 />
+              <FormField
+                control={form.control}
+                name="departureCity"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Departure City *</FormLabel>
+                    <Select
+                      value={field.value || ""} // ensures placeholder shows initially
+                      onValueChange={(value) => field.onChange(value)}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select or choose 'Other'" />
+                        </SelectTrigger>
+                      </FormControl>
 
-                <FormField
-                  control={form.control}
-                  name="departureCity"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Departure City *</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
+                      <SelectContent
+                        style={{ backgroundColor: "hsl(0 0% 100%)" }}
+                        className="text-black border border-border shadow-lg rounded-md max-h-60 overflow-y-auto"
                       >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select or choose 'Other'" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent
-                          style={{ backgroundColor: "hsl(0 0% 100%)" }}
-                          className="text-black border border-border shadow-lg rounded-md max-h-60 overflow-y-auto"
-                        >
-                          {departureCities.map((city) => (
-                            <SelectItem key={city} value={city}>
-                              {city}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      {/* Show custom input if 'Other' selected */}
-                      {field.value === "Other" && (
-                        <div className="mt-2">
-                          <Input
-                            placeholder="Enter departure city"
-                            onChange={(e) =>
-                              form.setValue("departureCity", e.target.value)
-                            }
-                          />
-                        </div>
-                      )}
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                        {departureCities.map((city) => (
+                          <SelectItem key={city} value={city}>
+                            {city}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+
+                    {/* Show input ONLY when 'Other' is selected */}
+                    {field.value === "Other" && (
+                      <div className="mt-2">
+                        <Input
+                          placeholder="Enter departure city"
+                          onChange={(e) =>
+                            form.setValue("departureCity", e.target.value)
+                          }
+                        />
+                      </div>
+                    )}
+
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+
 
                 {/* Arrival City (Nigeria only) */}
                 <FormField
@@ -570,7 +502,6 @@ export function BookingForm({ type }) {
                     </FormItem>
                   )}
                 />
-                {type === "domestic" && (
                   <FormField
                     control={form.control}
                     name="passengers"
@@ -589,7 +520,7 @@ export function BookingForm({ type }) {
                       </FormItem>
                     )}
                   />
-                )}
+    
               </div>
             </div>
             {(type === "domestic" || type === "international") && (
@@ -771,123 +702,86 @@ export function BookingForm({ type }) {
                   </div>
                   {/* ✅ Primary Services */}
                   {/* ✅ Primary Services */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mt-4">
-                    {primaryServices.map((service) => {
-                      const isSelected = selectedServices?.includes(service.id);
-                      const selectedOpt = selectedOptions?.[service.id];
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mt-4">
+  {primaryServices.map((service) => {
+    const isSelected = selectedServices?.includes(service.id);
+    const selectedOpt = selectedOptions?.[service.id];
+    const currentPrice = service.prices?.[type] || 0;
+    const usdValue = convert(currentPrice, "NGN", "USD");
 
-                      return (
-                        <FormField
-                          key={service.id}
-                          control={form.control}
-                          name="services"
-                          render={({ field }) => (
-                            <div
-                              className={`relative border rounded-xl p-4 cursor-pointer transition-all overflow-hidden ${
-                                isSelected
-                                  ? "border-primary bg-gray-50 shadow-md"
-                                  : "border-gray-300 hover:border-primary/50 hover:shadow-sm"
-                              }`}
-                              style={{
-                                transition:
-                                  "max-height 0.3s ease, background-color 0.3s ease",
-                                maxHeight: isSelected ? "400px" : "100px",
-                              }}
-                              onClick={(e) => {
-                                if (
-                                  (e.target as HTMLElement).closest(
-                                    ".option-item"
-                                  )
-                                )
-                                  return;
+    return (
+      <FormField
+        key={service.id}
+        control={form.control}
+        name="services"
+        render={({ field }) => (
+          <div
+            className={`relative border rounded-xl p-4 cursor-pointer transition-all overflow-hidden ${
+              isSelected
+                ? "border-primary bg-gray-50 shadow-md"
+                : "border-gray-300 hover:border-primary/50 hover:shadow-sm"
+            }`}
+            style={{
+              transition: "max-height 0.3s ease, background-color 0.3s ease",
+              maxHeight: isSelected ? "400px" : "100px",
+            }}
+            onClick={(e) => {
+              if ((e.target as HTMLElement).closest(".option-item")) return;
 
-                                if (isSelected) {
-                                  field.onChange(
-                                    field.value?.filter(
-                                      (id: string) => id !== service.id
-                                    )
-                                  );
-                                  setSelectedOptions((prev) => {
-                                    const copy = { ...prev };
-                                    delete copy[service.id];
-                                    return copy;
-                                  });
-                                } else {
-                                  field.onChange([
-                                    ...(field.value || []),
-                                    service.id,
-                                  ]);
-                                }
-                              }}
-                            >
-                              {isSelected && (
-                                <div className="absolute top-2 right-2 bg-primary text-white rounded-full w-6 h-6 flex items-center justify-center">
-                                  ✓
-                                </div>
-                              )}
-                              <div className="flex justify-between items-center">
-                                <h4
-                                  className={`font-medium ${
-                                    isSelected
-                                      ? "text-gray-800"
-                                      : "text-gray-400"
-                                  }`}
-                                >
-                                  {service.label}
-                                </h4>
-                              </div>
+              if (isSelected) {
+                field.onChange(field.value?.filter((id: string) => id !== service.id));
+                setSelectedOptions((prev) => {
+                  const copy = { ...prev };
+                  delete copy[service.id];
+                  return copy;
+                });
+              } else {
+                field.onChange([...(field.value || []), service.id]);
+              }
+            }}
+          >
+            {isSelected && (
+              <div className="absolute top-2 right-2 bg-primary text-white rounded-full w-6 h-6 flex items-center justify-center">
+                ✓
+              </div>
+            )}
+            <div className="flex justify-between items-center">
+              <h4 className={`font-medium ${isSelected ? "text-gray-800" : "text-gray-400"}`}>
+                {service.label}
+              </h4>
+            </div>
 
-                              {/* 👇 Nested Domestic/International selection */}
-                              {isSelected && (
-                                <div className="mt-3 space-y-2">
-                                  {Object.entries(service.prices).map(
-                                    ([key, price]) => {
-                                      const isOptSelected = selectedOpt === key;
-                                      const usdValue = convert(
-                                        price,
-                                        "NGN",
-                                        "USD"
-                                      );
+            {/* Display only the current type price */}
+            {isSelected && (
+              <div className="mt-3 space-y-2">
+                <div
+                  className={`option-item flex justify-between items-center p-2 rounded-lg border cursor-pointer transition-all ${
+                    selectedOpt === type
+                      ? "border-primary bg-primary/10 text-primary font-semibold"
+                      : "border-gray-300 hover:bg-gray-50"
+                  }`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedOptions((prev) => ({
+                      ...prev,
+                      [service.id]: prev[service.id] === type ? "" : type,
+                    }));
+                  }}
+                >
+                  <span className="capitalize">{type} Flight</span>
+                  <span className="text-sm">
+                    {currency === "NGN" ? `₦${currentPrice.toLocaleString()}` : `$${usdValue.toFixed(2)}`}
+                  </span>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      />
+    );
+  })}
+</div>
 
-                                      return (
-                                        <div
-                                          key={key}
-                                          className={`option-item flex justify-between items-center p-2 rounded-lg border cursor-pointer transition-all ${
-                                            isOptSelected
-                                              ? "border-primary bg-primary/10 text-primary font-semibold"
-                                              : "border-gray-300 hover:bg-gray-50"
-                                          }`}
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            setSelectedOptions((prev) => ({
-                                              ...prev,
-                                              [service.id]:
-                                                prev[service.id] === key
-                                                  ? ""
-                                                  : key,
-                                            }));
-                                          }}
-                                        >
-                                          <span className="capitalize">
-                                            {key} Flight
-                                          </span>
-                                          <span className="text-sm">
-                                            {currency === "NGN"
-                                              ? `₦${price.toLocaleString()}`
-                                              : `$${usdValue.toFixed(2)}`}
-                                          </span>
-                                        </div>
-                                      );
-                                    }
-                                  )}
-                                </div>
-                              )}
-                            </div>
-                          )}
-                        />
-                      );
-                    })}
-                  </div>
 
                   {/* ✅ Additional Services */}
                   <FormDescription className="mt-6 text-xl font-semibold text-pretty">
@@ -915,7 +809,7 @@ export function BookingForm({ type }) {
                                 transition:
                                   "max-height 0.3s ease, background-color 0.3s ease",
                                 maxHeight:
-                                  isSelected && service.options
+                                  isSelected 
                                     ? "500px"
                                     : "100px",
                               }}
@@ -1056,6 +950,19 @@ export function BookingForm({ type }) {
                                       </div>
                                     );
                                   })}
+                              {isSelected && (
+                                <div className="mt-3 text-sm text-gray-500">
+                                  These services are available <strong>within Lagos</strong>.
+                                  <br />
+                                  For services outside Lagos, please contact{" "}
+                                  <a
+                                    href="tel:tel:+2348129911921"
+                                    className="text-primary font-medium hover:underline"
+                                  >
+                                    +234 812 991 1921
+                                  </a>.
+                                </div>
+                              )}
                                 </div>
                               )}
                             </div>
@@ -1140,13 +1047,14 @@ export function BookingForm({ type }) {
                         })}
                       </ul>
 
-                      <div className="mt-4 text-sm text-gray-600 border-t pt-3 leading-relaxed">
-                        <p>
-                          <strong>Note:</strong> These services are payable{" "}
-                          <b>offline</b>. Our BTM representative will contact
-                          you to confirm and arrange payment.
-                        </p>
-                      </div>
+                     <div className="mt-4 text-sm text-gray-600 border-t pt-3 leading-relaxed">
+                      <p>
+                        <strong>Note:</strong> Payment for these services is made <strong>offline</strong>. 
+                        Please contact a BTM representative at <a href="tel:+2348129911921" className="text-primary font-bold hover:underline">+234&nbsp;812&nbsp;991&nbsp;1921</a> 
+                          {""} to confirm and arrange your payment.
+                      </p>
+                    </div>
+
                     </div>
                   )}
 
@@ -1190,28 +1098,23 @@ export function BookingForm({ type }) {
                             </div>
                           )}
 
-                        <div className="flex justify-between items-center mt-2 border-t pt-2">
-                          <span className="font-semibold text-gray-700">
-                            Total
-                          </span>
-                          <span className="text-lg font-bold text-primary">
-                            {type === "international" &&
-                            form.watch("returnService")
-                              ? currency === "NGN"
-                                ? `₦${totalPrice.toLocaleString()}`
-                                : `$${totalDollarPrice.toLocaleString(
-                                    undefined,
-                                    {
-                                      minimumFractionDigits: 2,
-                                    }
-                                  )}`
-                              : currency === "NGN"
-                              ? `₦${totalPrice.toLocaleString()}`
-                              : `$${totalDollarPrice.toLocaleString(undefined, {
-                                  minimumFractionDigits: 2,
-                                })}`}
-                          </span>
-                        </div>
+                 <div className="flex justify-between items-center mt-2 border-t pt-2">
+                <span className="font-semibold text-gray-700">
+                  Total
+                </span>
+                <span className="text-lg font-bold text-primary">
+                  {currency === "NGN"
+                    ? `₦${totalPrice.toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}`
+                    : `$${totalDollarPrice.toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}`}
+                </span>
+              </div>
+
                       </div>
                     </div>
                   )}

@@ -40,7 +40,6 @@ export const formSchema = z
 
     // Arrival Section
     meetingLocation: z.string().optional(),
-    luggageNo: z.string().optional(),
     arrivalComment: z.string().optional(),
     departureComment: z.string().optional(),
     arrivalRating: z.string().optional(),
@@ -52,7 +51,6 @@ export const formSchema = z
     meetInOrOutside: z.string().optional(),
   })
   .superRefine((data, ctx) => {
-    // ✅ Conditional validation: only validate the selected service
     if (data.serviceType === "arrival") {
       if (!data.meetingLocation) {
         ctx.addIssue({
@@ -105,7 +103,6 @@ const BTMLogbookForm = () => {
     defaultValues: {
       serviceType: "",
       meetingLocation: "",
-      luggageNo: "",
       arrivalComment: "",
       departureComment: "",
       arrivalRating: "",
@@ -115,42 +112,38 @@ const BTMLogbookForm = () => {
       meetInOrOutside: "",
     },
   });
-  const onSubmit = async (data: FormData) => {
-    try {
-      setIsSubmitting(true);
+ const onSubmit = async (data: FormData) => {
+  try {
+    setIsSubmitting(true);
 
-      const response = await api.submitCustomerDetails(data, "feedback");
+    // submitCustomerDetails returns the parsed JSON directly
+    const response = await api.submitCustomerDetails(data, "feedback");
 
-      // const response = await axios.post(
-      //   "https://airport-protocol.onrender.com/api/feedback",
-      //   // "http://localhost:5000/api/feedback",
-      //   data
-      // );
-
-      if (response.data.success) {
-        toast({
-          title: "Form Submitted Successfully",
-          description: "Your BTM logbook entry has been recorded.",
-        });
-        form.reset();
-        setShowSuccess(true);
-      } else {
-        toast({
-          title: "Submission Failed",
-          description: response.data.message || "Something went wrong.",
-          variant: "destructive",
-        });
-      }
-    } catch (error: any) {
+    if (response.success) {
       toast({
-        title: "Server Error",
-        description: "Could not connect to the server.",
+        title: "Form Submitted Successfully",
+        description: response.message || "Your BTM logbook entry has been recorded.",
+      });
+      form.reset();
+      setShowSuccess(true);
+    } else {
+      toast({
+        title: "Submission Failed",
+        description: response.message || "Something went wrong.",
         variant: "destructive",
       });
-    } finally {
-      setIsSubmitting(false);
     }
-  };
+  } catch (error: any) {
+    toast({
+      title: "Server Error",
+      description: "Could not connect to the server.",
+      variant: "destructive",
+    });
+  } finally {
+    setIsSubmitting(false);
+  }
+};
+
 
   const selectedService = form.watch("serviceType");
 

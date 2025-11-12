@@ -21,7 +21,7 @@ export const CurrencyProvider: React.FC<{ children: React.ReactNode }> = ({
   const [currency, setCurrency] = useState<Currency>("NGN");
 
   // 🧾 Use rate from .env or default
-  const rate = Number(import.meta.env.VITE_USD_RATE) || 1600;
+  const rate = Number(import.meta.env.VITE_USD_RATE) || 1500;
 
   const toggleCurrency = () => {
     setCurrency((prev) => (prev === "NGN" ? "USD" : "NGN"));
