@@ -43,9 +43,9 @@ export const additionalServices: AdditionalService[] = [
     label: "Car Hire",
     tag: "offline",
     options: [
-      { type: "Bus", priceRange: "₦170,000 - ₦200,000" },
-      { type: "Saloon", priceRange: "₦150,000 - ₦180,000" },
-      { type: "SUV", priceRange: "₦205,000 - ₦280,000" },
+      { type: "Bus (14 seater)", priceRange: "₦170,000 - ₦200,000" },
+      { type: "Saloon (4 seater)", priceRange: "₦150,000 - ₦180,000" },
+      { type: "SUV (6 seater)", priceRange: "₦205,000 - ₦280,000" },
     ],
   },
   {
@@ -53,15 +53,17 @@ export const additionalServices: AdditionalService[] = [
     label: "Airport Transfer",
     tag: "offline",
     options: [
-      { type: "Saloon Car", priceRange: "₦90,000" },
-      { type: "SUV", priceRange: "₦130,000 - ₦180,000" },
+      { type: "Saloon (4 seater)", priceRange: "₦90,000" },
+      { type: "SUV (6 seater)", priceRange: "₦130,000 - ₦180,000" },
     ],
   },
   {
     id: "lounge-services",
-    label: "International Lounge Access",
-    price: 30200, 
+    label: "International Lounge Access",  
     tag: "offline",
+     options: [
+      { type: "International Lounge", priceRange: "₦30,200" }, 
+    ],
   },
   {
     id: "escort-services",
@@ -110,7 +112,39 @@ export const domesticCities = [
   "Ibadan",
   "Calabar",
   "Uyo",
-  "Other",
+  "Other"
+
 ];
 
-export const internationalCities = ["Lagos", "Abuja", "Port Harcourt", "Kano"];
+
+export const internationalCities = [
+  "New York",
+  "London",
+  "Dubai",
+  "Paris",
+  "Sydney",
+  "Tokyo",
+  "Toronto",
+  "Berlin",
+  "Rome",
+  "Nairobi",
+  "Amsterdam",
+  "Barcelona",
+  "Los Angeles",
+  "Mumbai",
+  "Cape Town",
+  "Singapore",
+  "Hong Kong",
+  "Bangkok",
+  "Mexico City",
+  "San Francisco",
+  "Chicago",
+  "Kuala Lumpur",
+  "Seoul",
+  "Moscow",
+  "Rio de Janeiro",
+  "Cairo",
+  "Buenos Aires",
+  "Shanghai",
+ "Other"
+];

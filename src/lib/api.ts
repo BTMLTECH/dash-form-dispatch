@@ -1,6 +1,6 @@
 // src/lib/api.ts
-const API_BASE = import.meta.env.VITE_API_BASE;
-// const API_BASE = "";
+// const API_BASE = import.meta.env.VITE_API_BASE;
+const API_BASE = "http://localhost:8081/api";
 export const api = {
   initiatePayment: async (payload: FormData) => {
     try {
@@ -49,23 +49,26 @@ export const api = {
           signal: controller.signal,
         });
 
+        
         clearTimeout(timeout);
-
+        
         // Try parsing JSON safely
         let result: any;
         try {
           result = await response.json();
         } catch {
           const text = await response.text();
+
           throw new Error(`Invalid JSON response: ${text}`);
         }
 
         // Handle non-success HTTP codes
-        if (!response.ok) {
-          const message =
-            result?.message || `Server returned ${response.status} ${response.statusText}`;
-          throw new Error(message);
-        }
+
+       if (!response.ok) {
+      // Use the backend error if available
+      const message = result?.error || result?.message || `Server returned ${response.status}`;
+      return { success: false, message }; 
+    }
 
         return result;
       } catch (error: any) {

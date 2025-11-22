@@ -210,9 +210,7 @@ const BTMLogbookForm = () => {
               </CardContent>
             </Card>
 
-            {/* ✅ Arrival Section */}
-            {/* ✅ Condensed Arrival Feedback Section */}
-            {/* ✅ Condensed Arrival Feedback Section */}
+       
             {selectedService === "arrival" && (
               <Card className="shadow-sm border-t-4 border-primary bg-card text-card-foreground">
                 <CardHeader>
@@ -594,47 +592,39 @@ const BTMLogbookForm = () => {
         </Form>
 
         {/* Success Dialog */}
-        <Dialog open={showSuccess} onOpenChange={setShowSuccess}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle className="text-primary">🎉 Thank you!</DialogTitle>
-            </DialogHeader>
-            <p>
-              Thank you very much for filling our form. Would you like to book
-              your next airport assistance?
-            </p>
-            <DialogFooter className="flex justify-end space-x-2">
-              <Button
-                onClick={() => setShowSuccess(false)}
-                className="bg-primary hover:bg-[hsl(240_4%_80%)] text-black"
-              >
-                No
-              </Button>
-              {/* <Button
-                className="bg-primary hover:bg-[hsl(240_4%_80%)] text-black"
-                onClick={() => {
-                  setShowSuccess(false);
-                  window.open(
-                    "https://airport-protocol.onrender.com/",
-                    "_blank"
-                  );
-                }}
-              >
-                Yes
-              </Button> */}
+          <Dialog open={showSuccess} onOpenChange={setShowSuccess}>
+            <DialogContent className="max-w-md w-full sm:w-11/12 mx-auto p-6">
+              <DialogHeader>
+                <DialogTitle className="text-primary text-lg sm:text-xl font-bold flex justify-center">
+                  🎉 Thank you!
+                </DialogTitle>
+              </DialogHeader>
 
-              <Button
-                className="bg-primary hover:bg-[hsl(240_4%_80%)] text-black"
-                onClick={() => {
-                  setShowSuccess(false);
-                  navigate("/");
-                }}
-              >
-                Yes
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+              <p className="text-center mt-4 text-sm sm:text-base">
+                Thank you very much for filling our form. Would you like to book your next airport assistance?
+              </p>
+
+              <DialogFooter className="flex flex-col sm:flex-row justify-center sm:justify-end mt-6 gap-3 sm:gap-2">
+                <Button
+                  onClick={() => setShowSuccess(false)}
+                  className="bg-primary hover:bg-[hsl(240_4%_80%)] text-black w-full sm:w-auto"
+                >
+                  No
+                </Button>
+
+                <Button
+                  onClick={() => {
+                    setShowSuccess(false);
+                    navigate("/");
+                  }}
+                  className="bg-primary hover:bg-[hsl(240_4%_80%)] text-black w-full sm:w-auto"
+                >
+                  Yes
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
       </div>
     </div>
   );

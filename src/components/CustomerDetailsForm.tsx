@@ -102,7 +102,6 @@ const onSubmit = async (values: z.infer<typeof formSchema>) => {
       });
     }
   } catch (error: any) {
-    console.error("❌ onSubmit error:", error);
 
     toast({
       title: "Server Error",

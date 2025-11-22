@@ -28,7 +28,6 @@ const PaymentSuccess: React.FC = () => {
           setError("Payment could not be verified or not found.");
         }
       } catch (err) {
-        console.error("Payment verification error:", err);
         setError("Error verifying payment. Please contact support.");
       } finally {
         setLoading(false);

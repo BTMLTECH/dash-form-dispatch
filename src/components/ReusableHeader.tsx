@@ -11,7 +11,7 @@ interface ReusableHeaderProps {
 const ReusableHeader: React.FC<ReusableHeaderProps> = ({
   title,
   description,
-  logoSrc = "/assets/btm.png",
+  logoSrc = "/assets/btm.svg",
   altText = "BTM Logo",
 }) => {
   return (
@@ -31,7 +31,7 @@ const ReusableHeader: React.FC<ReusableHeaderProps> = ({
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.6 }}
-            className="h-16 w-auto drop-shadow-md"
+            className="h-32 w-auto drop-shadow-md"
           />
         )}
 

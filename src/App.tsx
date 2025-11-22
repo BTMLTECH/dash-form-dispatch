@@ -12,6 +12,9 @@ import PaymentSuccess from "./components/PaymentSuccess";
 import PaymentFailed from "./components/PaymentFailed";
 import { BookingForm } from "./components/BTMLogbookForm";
 import { CurrencyProvider } from "./hooks/CurrencyContext";
+import AdminPage from "./components/admin/Admin";
+import SignupForm from "./components/admin/Signup";
+import QRCodePage from "./components/QRCodePage";
 
 const queryClient = new QueryClient();
 
@@ -32,6 +35,10 @@ const App = () => (
             <Route path="/customer-details" element={<CustomerDetailsForm />} />
             <Route path="/payment/success" element={<PaymentSuccess />} />
             <Route path="/payment/failed" element={<PaymentFailed />} />
+            <Route path="/admin/login" element={<AdminPage />} />
+            {/* <Route path="/admin/signup" element={<SignupForm />} /> */}
+            <Route path="/qrcode" element={<QRCodePage />} />
+
             <Route
               path="/international"
               element={<BookingForm key="international" type="international" />}
