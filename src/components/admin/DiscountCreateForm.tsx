@@ -69,7 +69,7 @@ export default function DiscountCreateForm() {
 
 const handleLogout = () => {
   localStorage.clear();
-  window.location.href = "/admin/login";
+  window.location.href = "/login";
 };
 
   const copyToClipboard = () => {
