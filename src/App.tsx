@@ -35,7 +35,7 @@ const App = () => (
             <Route path="/customer-details" element={<CustomerDetailsForm />} />
             <Route path="/payment/success" element={<PaymentSuccess />} />
             <Route path="/payment/failed" element={<PaymentFailed />} />
-            <Route path="/admin/login" element={<AdminPage />} />
+            <Route path="/login" element={<AdminPage />} />
             {/* <Route path="/admin/signup" element={<SignupForm />} /> */}
             <Route path="/qrcode" element={<QRCodePage />} />
 
