@@ -59,7 +59,7 @@ export const additionalServices: AdditionalService[] = [
   },
   {
     id: "lounge-services",
-    label: "International Lounge Access",  
+    label: "International Departures- Lounge access",  
     tag: "offline",
      options: [
       { type: "International Lounge", priceRange: "₦30,200" }, 

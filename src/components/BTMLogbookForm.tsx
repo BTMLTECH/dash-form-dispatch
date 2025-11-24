@@ -326,7 +326,7 @@ export function BookingForm({ type }) {
         title="Airport Services"
         description={
           type === "domestic"
-            ? "At BTM Travel, we redefine the airport experience with distinction, comfort, and sophistication. From seamless airport transfers and executive car hire to personalised escorting, lounge access, and meet & greet services — every detail is tailored to complement your journey. Simply complete the form below with your travel details, and our team will curate a bespoke experience that ensures efficiency, ease, and exclusivity from start to finish."
+            ? "At BTM Travel, we redefine the airport experience with distinction, comfort, and sophistication. From seamless airport transfers and executive car hire to personalised assistance, lounge access, and meet & greet services — every detail is tailored to complement your journey. Simply complete the form below with your travel details, and our team will curate a bespoke experience that ensures efficiency, ease, and exclusivity from start to finish."
             : "This is for international airports around the world outside Nigeria"
         }
       />
