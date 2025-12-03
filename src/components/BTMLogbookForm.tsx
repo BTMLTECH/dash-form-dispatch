@@ -113,7 +113,12 @@ export const formSchema = z
 
 type FormData = z.infer<typeof formSchema>;
 
-
+  const parsePriceRange = (range: string) => {
+    // Remove ₦ and commas, split by "-"
+    const parts = range.split("-").map(p => parseInt(p.replace(/[₦,]/g, "").trim(), 10));
+    if (parts.length === 1) return [parts[0], parts[0]];
+    return parts as [number, number];
+  };
 
 
 export function BookingForm({ type }) {
@@ -129,7 +134,7 @@ export function BookingForm({ type }) {
     [key: string]: string;
   }>({});
 
-
+const formatUSD = (amount: number) => `$${convert(amount, "NGN", "USD").toFixed(0)}`;
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -182,6 +187,7 @@ export function BookingForm({ type }) {
             : 1;
             
         const discountedNGN = totalNGN * discountFactor;
+
         const discountedUSD = totalUSD * discountFactor;
         setTotalPrice(discountedNGN);
         setTotalDollarPrice(discountedUSD);
@@ -227,6 +233,7 @@ export function BookingForm({ type }) {
     };
 
    const onSubmit = async (data: FormData) => {
+  
     const finalArrivalCity = data.arrivalCity === "Other" ? data.arrivalCityCustom : data.arrivalCity;
   
       try {
@@ -235,18 +242,47 @@ export function BookingForm({ type }) {
         // -----------------------
         // Prepare selected primary services
         // -----------------------
-        const selectedPrimary = primaryServices
-          .filter((service) => data.services.includes(service.id))
-          .map((svc) => ({
-            ...svc,
-            selectedFlight: selectedOptions[svc.id],
-            price: svc.prices?.[selectedOptions[svc.id]] || 0,
-          }));
+        // const selectedPrimary = primaryServices
+        //   .filter((service) => data.services.includes(service.id))
+        //   .map((svc) => ({
+        //     ...svc,
+        //     selectedFlight: selectedOptions[svc.id],
+        //     price: svc.prices?.[selectedOptions[svc.id]] || 0,
+            
+        //   }));
 
         // Additional services (not included in total)
-        const selectedAdditional = additionalServices
-          .filter((service) => data.services.includes(service.id))
-          .map((svc) => ({ ...svc, price: svc.price || 0 }));
+        // const selectedAdditional = additionalServices
+        //   .filter((service) => data.services.includes(service.id))
+        //   .map((svc) => ({ ...svc, price: svc.price || 0 }));
+
+ const selectedPrimary = primaryServices
+      .filter(svc => data.services.includes(svc.id))
+      .map(svc => ({
+        ...svc,
+        selectedFlight: selectedOptions[svc.id],
+        price: svc.prices?.[selectedOptions[svc.id]] || 0,
+        dollar: currency === "USD" ? +convert(svc.prices?.[selectedOptions[svc.id]] || 0, "NGN", "USD").toFixed(2) : undefined
+      }));
+
+    // Additional/offline services
+    const selectedAdditional = additionalServices
+      .filter(svc => data.services.includes(svc.id))
+      .map(svc => {
+        if (svc.options) {
+          const convertedOptions = svc.options.map(opt => {
+            const [min, max] = parsePriceRange(opt.priceRange);
+            const usdRange = `${formatUSD(min)} - ${formatUSD(max)}`;
+            return {
+              ...opt,
+              priceRangeUSD: usdRange
+            };
+          });
+          return { ...svc, options: convertedOptions };
+        }
+        // Services without options
+        return { ...svc };
+      });
 
         const selectedDetails = [...selectedPrimary, ...selectedAdditional];
 
@@ -773,7 +809,7 @@ export function BookingForm({ type }) {
                       Type of Service
                     </h3>
 
-                   { type === "type" && (
+                   { type === "domestic" && (
 
                      <CurrencyToggle />
                    )

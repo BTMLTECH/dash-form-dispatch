@@ -6,6 +6,7 @@ import { toast } from "@/hooks/use-toast";
 export default function DiscountCreateForm() {
  
   const [form, setForm] = useState({
+    membership: "",
     discountType: "percentage",
     amount: 0,
     expiresAt: "",
@@ -44,6 +45,7 @@ export default function DiscountCreateForm() {
         });
 
         setForm({
+          membership: "",
           discountType: "percentage",
           amount: 0,
           expiresAt: "",
@@ -115,6 +117,22 @@ const handleLogout = () => {
               </button>
             )}
           </div>
+
+          {/* Membership Type */}
+          <div>
+            <label className="block font-medium mb-1">Membership Group</label>
+            <select
+              value={form.membership || ""}
+              onChange={(e) => setForm({ ...form, membership: e.target.value })}
+              className="w-full border rounded-lg p-2 focus:ring focus:ring-primary/30"
+              required
+            >
+              <option value="">Select Group</option>
+              <option value="BBG">BBG (British Business Group)</option>
+              <option value="NBCC">NBCC (Nigeria British Chamber of Commerce)</option>
+            </select>
+          </div>
+
 
           {/* Discount Type */}
           <div>
