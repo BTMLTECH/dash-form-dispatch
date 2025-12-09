@@ -172,12 +172,15 @@ const formatUSD = (amount: number) => `$${convert(amount, "NGN", "USD").toFixed(
     const returnService = form.watch("returnService");
 
       useEffect(() => {
-        const totalNGN =
+         const passengers = Number(form.watch("passengers") || 1);
+        const totalNGNPerPerson  =
           selectedServices?.reduce((acc, serviceId) => {
             const svc = primaryServices.find((s) => s.id === serviceId);
             const selectedKey = selectedOptions?.[serviceId];
             return acc + (svc?.prices?.[selectedKey] || 0);
           }, 0) || 0;
+
+        const totalNGN = totalNGNPerPerson * passengers;
 
         const totalUSD = convert(totalNGN, "NGN", "USD");
 
@@ -194,7 +197,7 @@ const formatUSD = (amount: number) => `$${convert(amount, "NGN", "USD").toFixed(
 
         form.setValue("totalPrice", discountedNGN);
         form.setValue("totalDollarPrice", discountedUSD);
-      }, [selectedServices, selectedOptions, returnService, discount]);
+      }, [selectedServices, selectedOptions, form.watch("passengers"), returnService, discount]);
 
 
     const verifyDiscount = async () => {
@@ -239,23 +242,7 @@ const formatUSD = (amount: number) => `$${convert(amount, "NGN", "USD").toFixed(
       try {
         setIsSubmitting(true);
 
-        // -----------------------
-        // Prepare selected primary services
-        // -----------------------
-        // const selectedPrimary = primaryServices
-        //   .filter((service) => data.services.includes(service.id))
-        //   .map((svc) => ({
-        //     ...svc,
-        //     selectedFlight: selectedOptions[svc.id],
-        //     price: svc.prices?.[selectedOptions[svc.id]] || 0,
-            
-        //   }));
-
-        // Additional services (not included in total)
-        // const selectedAdditional = additionalServices
-        //   .filter((service) => data.services.includes(service.id))
-        //   .map((svc) => ({ ...svc, price: svc.price || 0 }));
-
+       
  const selectedPrimary = primaryServices
       .filter(svc => data.services.includes(svc.id))
       .map(svc => ({
@@ -299,6 +286,7 @@ const formatUSD = (amount: number) => `$${convert(amount, "NGN", "USD").toFixed(
           totalDollarPrice: totalDollarPrice.toFixed(2), 
           discountCode: discount?.code || null,      
         };
+
         // -----------------------
         // Send to backend
         // -----------------------
@@ -1256,14 +1244,23 @@ const formatUSD = (amount: number) => `$${convert(amount, "NGN", "USD").toFixed(
                     primaryServices.some((s) => s.id === id)
                   ) && (
                  <div className="mt-8 p-4 border rounded-lg bg-gray-50">
-                  <h4 className="font-semibold text-gray-700 mb-3 flex items-center justify-between">
-                    Cart Summary
-                    {discount?.percentage && (
-                      <span className="text-sm font-medium text-[#ffa30f]">
-                        ✔ Discount applied: {discount.percentage}% off
-                      </span>
-                    )}
-                  </h4>
+              <h4 className="font-semibold text-gray-700 mb-3 flex items-center justify-between">
+  Cart Summary
+
+  {/* RIGHT SIDE CONTENT (stacked vertically) */}
+  <div className="flex flex-col items-end">
+    {discount?.percentage && (
+      <span className="text-sm font-medium text-[#ffa30f]">
+        ✔ Discount applied: {discount.percentage}% off
+      </span>
+    )}
+
+    <span className="text-xs text-gray-500">
+      Passengers: {form.watch("passengers") || 1}
+    </span>
+  </div>
+</h4>
+
 
                   <div className="space-y-2">
                     <div className="flex justify-between text-gray-700">
