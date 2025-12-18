@@ -35,7 +35,8 @@ export const api = {
     }
   },
 
-    submitCustomerDetails: async (data: any, url: string, timeoutMs = 10000) => {
+    submitCustomerDetails: async (data: any, url: string, ) => {
+      const timeoutMs = url === "booking" ? 45000 : 10000;
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), timeoutMs);
 
@@ -51,45 +52,86 @@ export const api = {
 
         
         clearTimeout(timeout);
-        
-        // Try parsing JSON safely
-        let result: any;
-        try {
-          result = await response.json();
-        } catch {
-          const text = await response.text();
 
-          throw new Error(`Invalid JSON response: ${text}`);
-        }
+        let result;
+    const clone = response.clone();
 
-        // Handle non-success HTTP codes
-
-       if (!response.ok) {
-      // Use the backend error if available
-      const message = result?.error || result?.message || `Server returned ${response.status}`;
-      return { success: false, message }; 
+    try {
+      result = await response.json();
+    } catch {
+      const text = await clone.text();
+      throw new Error(`Invalid JSON response: ${text}`);
     }
 
-        return result;
-      } catch (error: any) {
-        clearTimeout(timeout);
+    // Handle NON-200 responses
+    if (!response.ok) {
+      return {
+        success: false,
+        message: result?.error || result?.message || `Server returned ${response.status}`,
+      };
+    }
 
-        let message = "Network request failed. Please check your internet connection.";
+    return result;
+  } catch (error: any) {
+    clearTimeout(timeout);
 
-        if (error.name === "AbortError") {
-          message = "⏱️ Request timed out. Please try again later.";
-        } else if (error?.message?.includes("Failed to fetch")) {
-          message = "🌐 Unable to connect to the server. Please check your network or VPN.";
-        } else if (error?.message) {
-          message = error.message;
-        }
+    let message = "Network request failed. Please check your internet connection.";
 
+    if (error.name === "AbortError") {
+      message = "⏱️ Request timed out. Please try again later.";
+    } else if (error?.message?.includes("Failed to fetch")) {
+      message = "🌐 Unable to connect to the server. Please check your network";
+    } else if (error?.message) {
+      message = error.message;
+    }
 
-        return {
-          success: false,
-          message,
-        };
-      }
-    },
+    return {
+      success: false,
+      message,
+    };
+  }
+},
 
 };
+        
+        // Try parsing JSON safely
+//         let result: any;
+//         try {
+//           result = await response.json();
+//         } catch {
+//           const text = await response.text();
+
+//           throw new Error(`Invalid JSON response: ${text}`);
+//         }
+
+//         // Handle non-success HTTP codes
+
+//        if (!response.ok) {
+//       // Use the backend error if available
+//       const message = result?.error || result?.message || `Server returned ${response.status}`;
+//       return { success: false, message }; 
+//     }
+
+//         return result;
+//       } catch (error: any) {
+//         clearTimeout(timeout);
+
+//         let message = "Network request failed. Please check your internet connection.";
+
+//         if (error.name === "AbortError") {
+//           message = "⏱️ Request timed out. Please try again later.";
+//         } else if (error?.message?.includes("Failed to fetch")) {
+//           message = "🌐 Unable to connect to the server. Please check your network or VPN.";
+//         } else if (error?.message) {
+//           message = error.message;
+//         }
+
+
+//         return {
+//           success: false,
+//           message,
+//         };
+//       }
+//     },
+
+// };
