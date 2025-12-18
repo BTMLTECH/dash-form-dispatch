@@ -31,12 +31,15 @@ const formSchema = z
     btmProtocolOfficerName: z
       .string()
       .min(1, "BTM Protocol Officer Name is required"),
-    partnerProtocolOfficerName: z
-      .string()
-      .min(1, "Airport Partner Protocol Officer Name is required"),
-    partnerProtocolOfficerMobile: z
-      .string()
-      .min(1, "Partner Protocol Officer Mobile Number is required"),
+    // partnerProtocolOfficerName: z
+    //   .string()
+    //   .min(1, "Airport Partner Protocol Officer Name is required"),
+    // partnerProtocolOfficerMobile: z
+    //   .string()
+    //   .min(1, "Partner Protocol Officer Mobile Number is required"),
+    partnerProtocolOfficerName: z.string().optional(),
+    partnerProtocolOfficerMobile: z.string().optional(),
+
 
     badgeVerification: z
       .enum(["yes", "no"])
@@ -61,7 +64,19 @@ const formSchema = z
       path: ["checkInComment"],
       message: "Please provide details about the check-in issues",
     }
-  );
+  )
+  .refine(
+  (data) =>
+    !data.partnerProtocolOfficerName ||
+    !!data.partnerProtocolOfficerMobile,
+  {
+    path: ["partnerProtocolOfficerMobile"],
+    message:
+      "Partner Protocol Officer Mobile is required when name is provided",
+  }
+)
+
+  ;
 
 
 export default function CheckInReportForm() {
