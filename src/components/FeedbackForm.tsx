@@ -31,6 +31,15 @@ import ReusableHeader from "./ReusableHeader";
 
 export const formSchema = z
   .object({
+    // New fields
+    fullName: z
+      .string()
+      .min(1, { message: "Full name is required" }),
+
+    airlineName: z
+      .string()
+      .min(1, { message: "Airline name is required" }),
+
     // Common
     serviceType: z
       .union([z.enum(["arrival", "departure"]), z.literal("")])
@@ -101,6 +110,8 @@ const BTMLogbookForm = () => {
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      fullName: "",
+      airlineName: "",
       serviceType: "",
       meetingLocation: "",
       arrivalComment: "",
@@ -158,6 +169,45 @@ const BTMLogbookForm = () => {
         {/* ✅ Form */}
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+            <Card className="shadow-sm border-t-4 border-primary bg-card text-card-foreground">
+          <CardHeader>
+            <CardTitle className="text-primary">Passenger Details</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Full Name */}
+            <FormField
+              control={form.control}
+              name="fullName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="font-medium text-foreground">
+                    Full Name
+                  </FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter full name" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            {/* Airline Name */}
+            <FormField
+              control={form.control}
+              name="airlineName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="font-medium text-foreground">
+                    Airline Name
+                  </FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter airline name" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </CardContent>
+        </Card>
             {/* Service Type Card */}
             <Card className="shadow-sm border-t-4 border-primary bg-card text-card-foreground">
               <CardHeader>
