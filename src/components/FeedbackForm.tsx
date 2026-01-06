@@ -40,6 +40,8 @@ export const formSchema = z
       .string()
       .min(1, { message: "Airline name is required" }),
 
+    tripDate: z.string().min(1, "Trip Date is required"),
+
     // Common
     serviceType: z
       .union([z.enum(["arrival", "departure"]), z.literal("")])
@@ -112,6 +114,7 @@ const BTMLogbookForm = () => {
     defaultValues: {
       fullName: "",
       airlineName: "",
+      tripDate: "",
       serviceType: "",
       meetingLocation: "",
       arrivalComment: "",
@@ -206,6 +209,25 @@ const BTMLogbookForm = () => {
                 </FormItem>
               )}
             />
+
+            <FormField
+              control={form.control}
+              name="tripDate"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Trip Date</FormLabel>
+                  <FormControl>
+                    <input
+                      type="date"
+                      {...field}
+                      className="border rounded px-3 py-2 w-full"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
           </CardContent>
         </Card>
             {/* Service Type Card */}
